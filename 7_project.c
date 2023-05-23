@@ -1,3 +1,5 @@
+//FND, KEYPAD, LED 코드 전체 수정해야함.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -11,11 +13,6 @@
 #define MAX_INNINGS 9
 #define MAX_DIGITS 4
 #define MAX_LEDS 7
-
-// Global variables
-int answer[MAX_DIGITS]; // CPU가 생성한 4자리 숫자
-int currentInning = 1; // 현재 이닝
-int strikes, balls; // 현재 이닝에서의 Strikes와 Balls 개수
 
 // Memory mapping addresses
 #define FND_CS0 0x11000000
@@ -46,11 +43,19 @@ int strikes, balls; // 현재 이닝에서의 Strikes와 Balls 개수
 #define NUM_LEDS 7
 #define LED_ADDRESS(i) (FPGA_LED + i)
 
-// clcd 관련 변수
+// Global variables
+int answer[MAX_DIGITS]; // CPU가 생성한 4자리 숫자
+int currentInning = 1; // 현재 이닝
+int strikes, balls; // 현재 이닝에서의 Strikes와 Balls 개수
+int lastInning[MAX_INNINGS][3]; // Array to store the results of each inning
+int numLives = 7; // Number of lives remaining
+int hiddenCoinUsed = 0; // Flag to track if hidden coin has been used
+
+// clcd variables
 unsigned short *CLCD_CMD, *CLCD_DATA;
 int            fd0 = 0;
 
-// dot_matrix 관련 변수
+// dot_matrix variables
 unsigned short *dot;
 unsigned int    fd;
 unsigned short *DOT_COL1, *DOT_COL2, *DOT_COL3, *DOT_COL4, *DOT_COL5;
@@ -93,12 +98,7 @@ unsigned short dot_table[35][5] = {
 	{0x7F, 0x7F, 0x7F, 0x7F, 0x7F },
 };
 
-// Additional global variables for new components
-int lastInning[MAX_INNINGS][3]; // Array to store the results of each inning
-int numLives = 7; // Number of lives remaining
-int hiddenCoinUsed = 0; // Flag to track if hidden coin has been used
-
-// Function prototypes
+// general functions declare
 void initializeGame();
 void generateAnswer();
 void playGame();
@@ -128,13 +128,14 @@ static void clcd_exit(void);
 void        write_byte(char ch);
 int         clcd_init(void);
 
-
 // dot_matrix functions declare
 int dot_init(void);
 void dot_write(int);
 void dot_clear(void);
 void dot_exit(void);
 
+
+// general functions define
 int main() {
     initializeGame();
     playGame();
@@ -171,7 +172,6 @@ void generateAnswer() {
 }
 
 
-
 void playGame() {
     while (currentInning <= MAX_INNINGS && numLives > 0) {
         int guess[MAX_DIGITS];
@@ -196,16 +196,19 @@ void playGame() {
     }
 
     if (currentInning > MAX_INNINGS || numLives == 0) {
+        len1 = 9, len2 = 8, CG_or_DD = 1;
+        char buf1[100]="Game over", buf2[100]="You lose";
         // 게임 오버
         printf("Game over! You lost the game.\n");
         // Additional code for new components
-        displayCLCDMessage("Game over // you lose");
-        displayFNDNumbers(answer);
-        displayDotMatrixAnimation();
-        updateLEDs(0);
+        displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
+        displayFNDNumbers(answer); // fnd 수정해야함
+        displayDotMatrixAnimation(); // 게임 오버 애니메이션으로 수정해야함
+        updateLEDs(0); // led 수정해야함
     }
 }
 
+// 이거가 사용자가 숫자를 입력하는 함수인데, keypad를 활용할 수 있게 수정해야함
 void getInput(int *input) {
     printf("Enter your guess (4 digits): ");
     scanf("%1d%1d%1d%1d", &input[0], &input[1], &input[2], &input[3]);
@@ -230,11 +233,16 @@ void checkGuess(int *guess) {
         }
     }
 
-    // Additional code for new components
-    displayCLCDMessage("Last inning // 'X'S 'X'B");
-    displayFNDNumbers(guess);
-    displayDotMatrixAnimation();
-    updateLEDs(numLives);
+    len1 = 8, len2 = 5, CG_or_DD = 1;
+    char buf1[100];
+    snprintf(buf1, sizeof(buf1), "%d inning", currentInning);
+    char buf2[100];
+    snprintf(buf2, sizeof(buf2), "%dS %dB", strikes, balls);
+
+    displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2); //CLCD 수정완료
+    displayFNDNumbers(guess); //수정해야함
+    displayDotMatrixAnimation(); //35초 타이머 애니메이션 돌아감
+    updateLEDs(numLives); //수정해야함
 
     checkLastInning();
 }
@@ -271,6 +279,7 @@ void showLastInning(int inning) {
     }
 }
 
+//displayCLCDMessage 수정 완료
 void displayCLCDMessage(int len1, int len2, int CG_or_DD, char *buf1, char *buf2) {
     int i;
     // Write command to CLCD control register
@@ -287,7 +296,7 @@ void displayCLCDMessage(int len1, int len2, int CG_or_DD, char *buf1, char *buf2
     clcd_exit();
 }
 
-
+// displayFNDNumbers 수정해야함
 void displayFNDNumbers(int *numbers) {
     // Write numbers to FND display using memory mapping
     int i;
@@ -297,6 +306,7 @@ void displayFNDNumbers(int *numbers) {
     }
 }
 
+// dotmatrixanimation 수정완료
 void displayDotMatrixAnimation() {
     int i;
     dot_init();
@@ -339,7 +349,7 @@ int readMemory(int address) {
 }
 
 
-// clcd functions
+// clcd functions -> 수정 완료
 int clcd_init(void){
     int ierr = 0;
     CLCD_CMD = mmap(NULL, 2, PROT_WRITE, MAP_SHARED, fd, FPGA_CLCD_WR);
@@ -420,7 +430,7 @@ void clcd_exit(void){
 }
 
 
-// dot matrix functions
+// dot matrix functions -> 수정 완료
 int dot_init(void){
 	int ierr=0;
 	DOT_COL1 = mmap(NULL, 2, PROT_WRITE, MAP_SHARED, fd, FPGA_DOT_COL1);

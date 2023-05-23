@@ -34,11 +34,11 @@ int main(int argc, char **argv){
     int i, CG_or_DD = 1, N = 2;
     unsigned char cmd = 'r', buf[2] = "00";
     fd = open("/dev/mem", O_RDWR | O_SYNC);
-clcd_init();
-init_keyboard();
-initialize_clcd();
-printf("\n   CLCD Counter\n");
-printf("   r/s/c/q to restart/stop/continue/quit the counter\n");
+    clcd_init();
+    init_keyboard();
+    initialize_clcd();
+    printf("\n   CLCD Counter\n");
+    printf("   r/s/c/q to restart/stop/continue/quit the counter\n");
     while( cmd != 'q'){
 
         if (cmd != 's'){ 
@@ -51,11 +51,9 @@ printf("   r/s/c/q to restart/stop/continue/quit the counter\n");
                 buf[1] = '0'; 
                 buf[0]++;
                 if (buf[0] > '9') { 
-			buf[0]=buf[1]='0';
-
-			}
-		}
-			 
+                    buf[0]=buf[1]='0';
+                }
+            }
         }
         usleep(10); 
         if (kbhit()){
