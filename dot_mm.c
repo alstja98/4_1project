@@ -61,12 +61,12 @@ int dot_init(void){ // mmap(
 }
 
 
-void dot_write(int decimal){
-	*DOT_COL1 = dot_table[decimal][0];
-	*DOT_COL2 = dot_table[decimal][1];
-	*DOT_COL3 = dot_table[decimal][2];
-	*DOT_COL4 = dot_table[decimal][3];
-	*DOT_COL5 = dot_table[decimal][4];
+void dot_write(int time){
+	*DOT_COL1 = dot_table[time][0];
+	*DOT_COL2 = dot_table[time][1];
+	*DOT_COL3 = dot_table[time][2];
+	*DOT_COL4 = dot_table[time][3];
+	*DOT_COL5 = dot_table[time][4];
 }
 
 void dot_clear(void){
