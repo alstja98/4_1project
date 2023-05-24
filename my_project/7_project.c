@@ -2,6 +2,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <string.h>
+#include <pthread.h>
 #include "device.h"
 
 #define MAX_INNINGS 9
@@ -29,7 +30,9 @@ void updateLastInning(int inning, int strikes, int balls);
 void showLastInning(int inning);
 void displayFNDNumbers(int *numbers);
 
-
+// thread functions
+void *DOT_Timer_Thread(void *arg);
+void *CLCD_Display_Thread(void *arg);
 
 
 // general functions define
@@ -47,10 +50,33 @@ int main() {
 		return -1;
 	}
     
+    // int i, len1 = 14, len2 = 11, CG_or_DD = 1;
+    // char buf1[100]="Bulls and Cows", buf2[100]="Press Enter";
     //game start
-    displayDotMatrixAnimation();
+    printf("Game Start!\n");
+    // DOT_Timer(); // 성공
+    // CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
+    printf("CLCD!\n");
     // initializeGame();
     // playGame();
+
+
+        // 멀티 스레드로 병렬 처리
+            pthread_t tid1, tid2;
+
+            // Create threads
+            if (pthread_create(&tid1, NULL, DOT_Timer_Thread, NULL) != 0) {
+                perror("Failed to create DOT_Timer_Thread");
+                return -1;
+            }
+            if (pthread_create(&tid2, NULL, CLCD_Display_Thread, NULL) != 0) {
+                perror("Failed to create CLCD_Display_Thread");
+                return -1;
+            }
+
+            // Wait for both threads to finish
+            pthread_join(tid1, NULL);
+            pthread_join(tid2, NULL);
 
     return 0;
 }
@@ -194,3 +220,20 @@ void showLastInning(int inning) {
         printf("Invalid inning number.\n");
     }
 }
+
+
+// thread functions declare
+
+void *DOT_Timer_Thread(void *arg) {
+    DOT_Timer();
+    return NULL;
+}
+
+void *CLCD_Display_Thread(void *arg) {
+    // Parameters would normally be passed via arg, but for simplicity, I'll define them directly here
+    int len1 = 14, len2 = 11, CG_or_DD = 1;
+    char buf1[100]="Bulls and Cows", buf2[100]="Press Enter";
+    CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
+    return NULL;
+}
+
