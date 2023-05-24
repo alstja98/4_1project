@@ -65,9 +65,9 @@ int main(void){
 		if (cmd == 'b') {
 				start_time = time(NULL);
 			while(1){
+
 				current_time = time(NULL);
             		
-
 				fnd_display(count, 4);
 				usleep(5000000); 
 				count[0]++; 
@@ -83,7 +83,7 @@ int main(void){
 						}
 					}
 				}
-					if (current_time - start_time >= 3){
+					if (current_time - start_time >= 10){
 					count[0]=count[1]=count[2]=count[3]= 8 ;
 					fnd_display(count,4) ;
 				} 
