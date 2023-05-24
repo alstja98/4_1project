@@ -117,31 +117,7 @@ CLCDINFO CLCDInfo = {
 // Keypad variables
 bool isKeypadInitialized = FALSE;
 ushort *pKeyIn = 0, *pKeyOut = 0;
-
-INIT_RESULT	initDevices(DEVICE devices)
 {
-	if ((fdMem = open("/dev/mem", O_RDWR | O_SYNC)) < 0) return FAIL_MEMORY_OPEN;
-
-	initKeyboard();
-
-	int deviceResult = 0;
-	if ((devices & DEVICE_LED) == DEVICE_LED) deviceResult |= initLED(fdMem);
-	if ((devices & DEVICE_FND) == DEVICE_FND) deviceResult |= initFND(fdMem);
-	if ((devices & DEVICE_DOT) == DEVICE_DOT) deviceResult |= initDOT(fdMem);
-	if ((devices & DEVICE_CLCD) == DEVICE_CLCD) deviceResult |= initCLCD(fdMem);
-	if ((devices & DEVICE_KEYPAD) == DEVICE_KEYPAD) deviceResult |= initKEYPAD(fdMem);
-
-	return deviceResult;
-}
-
-void closeDevices()
-{
-	printf("All device is closing.\n");
-
-	closeKEYPAD();
-	closeCLCD();
-	closeDOT();
-	closeFND();
 	closeLED();
 	closeKeyboard();
 	close(fdMem);
@@ -288,7 +264,7 @@ void LEDOnFromBottom(int count)
 //
 // 7-Segment functions
 //
-int initFND(int fd)
+int FND(int fd)
 {
 	int idx = 0;
 
