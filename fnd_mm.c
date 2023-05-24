@@ -3,6 +3,8 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
 
 #define FND_CS0 0x11000000
 #define FND_CS1 0x11100000
@@ -30,8 +32,9 @@ unsigned char hexn2fnd(char ch);
 void fnd_display(char *hexadecimal, int N);
 
 int main(void){
-	int dev,i; char cmd;
-	unsigned char count[2]={0,0}; unsigned short tmp1, tmp2;
+	int dev,i;   char cmd;
+	unsigned char count[8]={0,0,0,0,0,0,0,0}; unsigned short tmp1, tmp2;
+	time_t start_time, current_time;
 
 	if((fd=open("/dev/mem",O_RDWR|O_SYNC))<0){ 
 		perror("failed Opening FND (using mmap)! \n"); exit(1);
@@ -42,26 +45,53 @@ int main(void){
 	}
 
 	init_keyboard();
-	  //cmd='r';  ??
+	    cmd='r';
 	fnd_clear();
 
-	while(cmd!='q'){ 
-	//step 1  
-		if (cmd != 's') { 
+	//step 1 : 게임시작 시
+	while(cmd!='q'){   
 
-    	count[0] = count[1] = count[2] = count[3] = count[4] = count[5] = count[6] = count[7] = 0 ;
+		if (cmd == 'a') { 				
+    	count[0] = count[1] = count[2] = count[3] = count[4] = count[5] = count[6] = count[7] = 8 ;
         fnd_display(count, 8);
         usleep(1000000);
         fnd_clear();
         usleep(1000000);
 		}
-	//step 2
-		if ()
-		count[4] 
 
+		usleep(10);
+	
+//step 2  :  step1 에서 Enter 입력시 
+		if (cmd == 'b') {
+				start_time = time(NULL);
+			while(1){
+				current_time = time(NULL);
+            		
 
-			} 
+				fnd_display(count, 4);
+				usleep(5000000); 
+				count[0]++; 
+				if (count[0] > 1) { 
+					count[1]++; 
+					if (count[1] > 2) {
+						count[2]++;
+						if(count[2] > 3){
+							count[3]++;
+							if(count[3] > 4){
+								count[4]++;
+							}
+						}
+					}
+				}
+					if (current_time - start_time >= 3){
+					count[0]=count[1]=count[2]=count[3]= 8 ;
+					fnd_display(count,4) ;
+				} 
+			}
+			 
 		} 
+		
+
 
 		usleep(10); 
 		if (kbhit()) { 
