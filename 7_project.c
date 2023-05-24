@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
-#include <fcntl.h>
 #include <time.h>
 #include <unistd.h> // usleep 함수 사용을 위한 헤더 파일 추가
 #include <termios.h>
@@ -59,7 +58,7 @@ int            fd0 = 0;
 unsigned short *dot;
 unsigned int    fd;
 unsigned short *DOT_COL1, *DOT_COL2, *DOT_COL3, *DOT_COL4, *DOT_COL5;
-unsigned short dot_table[35][5] = {
+unsigned short dot_table[36][5] = {
 	{0x00, 0x00, 0x00, 0x00, 0x00 }, //0 seconds left
 	{0x00, 0x00, 0x00, 0x00, 0x40 }, //1 seconds left
 	{0x00, 0x00, 0x00, 0x40, 0x40 }, //2 seconds left
@@ -114,7 +113,7 @@ void writeMemory(int address, int data);
 int readMemory(int address);
 
 // clcd functions declare
-void displayCLCDMessage(const char *message);
+void displayCLCDMessage(int len1, int len2, int CG_or_DD, char *buf1, char *buf2);
 static void setcommand(unsigned short command);
 static void initialize_clcd(void);
 static void function_set(int DL, int N, int F);
@@ -152,9 +151,9 @@ void initializeGame() {
     // Additional initialization code for new components
     displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
     usleep(3000000);
-    displayFNDNumbers(answer);
+    // displayFNDNumbers(answer);
     displayDotMatrixAnimation();
-    updateLEDs(numLives);
+    // updateLEDs(numLives);
 }
 
 void generateAnswer() {
@@ -179,13 +178,17 @@ void playGame() {
         checkGuess(guess);
 
         if (strikes == MAX_DIGITS) {
+            int len1 = 9, len2 = 15, CG_or_DD = 1;
+            char buf1[100]="Game over";
+            char buf2[100]="you win";
+            snprintf(buf2, sizeof(buf2), "%d inning", currentInning);
             // 정답인 경우
             printf("Congratulations! You won the game in %d innings.\n", currentInning);
             // Additional code for new components
-            displayCLCDMessage("Game over // you win 'n'th");
-            displayFNDNumbers(answer);
+            displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
+            // displayFNDNumbers(answer);
             displayDotMatrixAnimation();
-            updateLEDs(numLives);
+            // updateLEDs(numLives);
             break;
         } else {
             printf("%dth Inning // %dS %dB\n", currentInning, strikes, balls);
@@ -196,15 +199,15 @@ void playGame() {
     }
 
     if (currentInning > MAX_INNINGS || numLives == 0) {
-        len1 = 9, len2 = 8, CG_or_DD = 1;
+        int len1 = 9, len2 = 8, CG_or_DD = 1;
         char buf1[100]="Game over", buf2[100]="You lose";
         // 게임 오버
         printf("Game over! You lost the game.\n");
         // Additional code for new components
         displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
-        displayFNDNumbers(answer); // fnd 수정해야함
+        // displayFNDNumbers(answer); // fnd 수정해야함
         displayDotMatrixAnimation(); // 게임 오버 애니메이션으로 수정해야함
-        updateLEDs(0); // led 수정해야함
+        // updateLEDs(0); // led 수정해야함
     }
 }
 
@@ -233,16 +236,16 @@ void checkGuess(int *guess) {
         }
     }
 
-    len1 = 8, len2 = 5, CG_or_DD = 1;
+    int len1 = 8, len2 = 5, CG_or_DD = 1;
     char buf1[100];
     snprintf(buf1, sizeof(buf1), "%d inning", currentInning);
     char buf2[100];
     snprintf(buf2, sizeof(buf2), "%dS %dB", strikes, balls);
 
     displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2); //CLCD 수정완료
-    displayFNDNumbers(guess); //수정해야함
+    // displayFNDNumbers(guess); //수정해야함
     displayDotMatrixAnimation(); //35초 타이머 애니메이션 돌아감
-    updateLEDs(numLives); //수정해야함
+    // updateLEDs(numLives); //수정해야함
 
     checkLastInning();
 }
@@ -297,14 +300,14 @@ void displayCLCDMessage(int len1, int len2, int CG_or_DD, char *buf1, char *buf2
 }
 
 // displayFNDNumbers 수정해야함
-void displayFNDNumbers(int *numbers) {
-    // Write numbers to FND display using memory mapping
-    int i;
-    for (i = 0; i < MAX_DIGITS; i++) {
-        int fndAddress = FND_CS0 + (i * 0x10000);
-        writeMemory(fndAddress, numbers[i]);
-    }
-}
+// void displayFNDNumbers(int *numbers) {
+//     // Write numbers to FND display using memory mapping
+//     int i;
+//     for (i = 0; i < MAX_DIGITS; i++) {
+//         int fndAddress = FND_CS0 + (i * 0x10000);
+//         writeMemory(fndAddress, numbers[i]);
+//     }
+// }
 
 // dotmatrixanimation 수정완료
 void displayDotMatrixAnimation() {
@@ -318,35 +321,37 @@ void displayDotMatrixAnimation() {
 }
 
 
-void updateLEDs(int lives) {
-    // Loop over all LEDs
-    for (int i = 0; i < NUM_LEDS; i++) {
-        if (i < lives) {
-            // If this LED represents a remaining life, turn it on
-            writeMemory(LED_ADDRESS(i), LED_ON);
-        } else {
-            // Otherwise, turn it off
-            writeMemory(LED_ADDRESS(i), LED_OFF);
-        }
-    }
-}
-
-void writeMemory(int address, int data) {
-    // 주어진 주소를 포인터로 캐스팅합니다.
-    int* pAddress = (int*)address;
-
-    // 포인터를 통해 해당 주소에 데이터를 쓸 수 있습니다.
-    *pAddress = data;
-}
+// void updateLEDs(int lives) {
+//     int i;
+//     // Loop over all LEDs
+//     for (i = 0; i < NUM_LEDS; i++) {
+//         if (i < lives) {
+//             // If this LED represents a remaining life, turn it on
+//             writeMemory(LED_ADDRESS(i), LED_ON);
+//         } else {
+//             // Otherwise, turn it off
+//             writeMemory(LED_ADDRESS(i), LED_OFF);
+//         }
+//     }
+// }
 
 
-int readMemory(int address) {
-    // Cast the address to a pointer
-    int* pAddress = (int*)address;
+// void writeMemory(int address, int data) {
+//     // 주어진 주소를 포인터로 캐스팅합니다.
+//     int* pAddress = (int*)address;
 
-    // Read the data at the given address
-    return *pAddress;
-}
+//     // 포인터를 통해 해당 주소에 데이터를 쓸 수 있습니다.
+//     *pAddress = data;
+// }
+
+
+// int readMemory(int address) {
+//     // Cast the address to a pointer
+//     int* pAddress = (int*)address;
+
+//     // Read the data at the given address
+//     return *pAddress;
+// }
 
 
 // clcd functions -> 수정 완료
