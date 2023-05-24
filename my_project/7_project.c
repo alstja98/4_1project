@@ -31,8 +31,13 @@ void showLastInning(int inning);
 void displayFNDNumbers(int *numbers);
 
 // thread functions
+void run_in_parallel(void *(*func1)(void *), void *(*func2)(void *), void *(*func3)(void *), void *(*func4)(void *), void *(*func5)(void *));
 void *DOT_Timer_Thread(void *arg);
+void *DOT_Baseball_Thread(void *arg);
 void *CLCD_Display_Thread(void *arg);
+// void *Thread_Func3(void *arg);
+// void *Thread_Func4(void *arg);
+// void *Thread_Func5(void *arg);
 
 
 // general functions define
@@ -50,45 +55,25 @@ int main() {
 		return -1;
 	}
     
-    // int i, len1 = 14, len2 = 11, CG_or_DD = 1;
-    // char buf1[100]="Bulls and Cows", buf2[100]="Press Enter";
-    //game start
     printf("Game Start!\n");
-    // DOT_Timer(); // 성공
-    // CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
-    printf("CLCD!\n");
-    // initializeGame();
+
+    initializeGame();
+    printf("initialize test finish");
     // playGame();
 
-
-        // 멀티 스레드로 병렬 처리
-            pthread_t tid1, tid2;
-
-            // Create threads
-            if (pthread_create(&tid1, NULL, DOT_Timer_Thread, NULL) != 0) {
-                perror("Failed to create DOT_Timer_Thread");
-                return -1;
-            }
-            if (pthread_create(&tid2, NULL, CLCD_Display_Thread, NULL) != 0) {
-                perror("Failed to create CLCD_Display_Thread");
-                return -1;
-            }
-
-            // Wait for both threads to finish
-            pthread_join(tid1, NULL);
-            pthread_join(tid2, NULL);
+    // 병렬처리 예시 
+    // run_in_parallel(DOT_Timer_Thread, CLCD_Display_Thread,NULL, NULL, NULL);
 
     return 0;
 }
 
 void initializeGame() {
-    int i, len1 = 14, len2 = 11, CG_or_DD = 1;
-    char buf1[100]="Bulls and Cows", buf2[100]="Press Enter";
     srand(time(NULL)); // 시간을 기반으로 난수 생성기 초기화
     generateAnswer();
-    printf("Answer: %d%d%d%d\n", answer[0], answer[1], answer[2], answer[3]);
+    printf("Answer testing: %d%d%d%d\n", answer[0], answer[1], answer[2], answer[3]);
     // Additional initialization code for new components
     // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
+    run_in_parallel(DOT_Baseball_Thread, CLCD_Display_Thread,NULL, NULL, NULL);
     usleep(3000000);
     // displayFNDNumbers(answer);
     // displayDotMatrixAnimation();
@@ -224,8 +209,61 @@ void showLastInning(int inning) {
 
 // thread functions declare
 
+// The generic function to run any two functions in parallel
+void run_in_parallel(void *(*func1)(void *), void *(*func2)(void *), void *(*func3)(void *), void *(*func4)(void *), void *(*func5)(void *)) {
+    pthread_t tid1, tid2, tid3, tid4, tid5;
+
+    int t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
+
+    if (func1 && pthread_create(&tid1, NULL, func1, NULL) == 0) {
+        t1 = 1;
+    }
+
+    if (func2 && pthread_create(&tid2, NULL, func2, NULL) == 0) {
+        t2 = 1;
+    }
+
+    if (func3 && pthread_create(&tid3, NULL, func3, NULL) == 0) {
+        t3 = 1;
+    }
+
+    if (func4 && pthread_create(&tid4, NULL, func4, NULL) == 0) {
+        t4 = 1;
+    }
+
+    if (func5 && pthread_create(&tid5, NULL, func5, NULL) == 0) {
+        t5 = 1;
+    }
+
+    if (t1) {
+        pthread_join(tid1, NULL);
+    }
+
+    if (t2) {
+        pthread_join(tid2, NULL);
+    }
+
+    if (t3) {
+        pthread_join(tid3, NULL);
+    }
+
+    if (t4) {
+        pthread_join(tid4, NULL);
+    }
+
+    if (t5) {
+        pthread_join(tid5, NULL);
+    }
+}
+
+
 void *DOT_Timer_Thread(void *arg) {
     DOT_Timer();
+    return NULL;
+}
+
+void *DOT_Baseball_Thread(void *arg) {
+    DOT_Display_Baseball();
     return NULL;
 }
 
