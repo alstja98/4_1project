@@ -34,7 +34,7 @@ void displayFNDNumbers(int *numbers);
 
 // general functions define
 int main() {
-    // devices initialization
+    // devices initialization 완료
     int result = initDevices(DEVICE_ALL);
 	if (result == FAIL_MEMORY_OPEN) {
 		perror("Could not open 'dev/mem'.");
@@ -48,8 +48,9 @@ int main() {
 	}
     
     //game start
-    initializeGame();
-    playGame();
+    displayDotMatrixAnimation();
+    // initializeGame();
+    // playGame();
 
     return 0;
 }
@@ -59,12 +60,12 @@ void initializeGame() {
     char buf1[100]="Bulls and Cows", buf2[100]="Press Enter";
     srand(time(NULL)); // 시간을 기반으로 난수 생성기 초기화
     generateAnswer();
-    
+    printf("Answer: %d%d%d%d\n", answer[0], answer[1], answer[2], answer[3]);
     // Additional initialization code for new components
-    displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
+    // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
     usleep(3000000);
     // displayFNDNumbers(answer);
-    displayDotMatrixAnimation();
+    // displayDotMatrixAnimation();
     // updateLEDs(numLives);
 }
 
@@ -97,9 +98,9 @@ void playGame() {
             // 정답인 경우
             printf("Congratulations! You won the game in %d innings.\n", currentInning);
             // Additional code for new components
-            displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
+            // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
             // displayFNDNumbers(answer);
-            displayDotMatrixAnimation();
+            // displayDotMatrixAnimation();
             // updateLEDs(numLives);
             break;
         } else {
@@ -116,9 +117,9 @@ void playGame() {
         // 게임 오버
         printf("Game over! You lost the game.\n");
         // Additional code for new components
-        displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
+        // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
         // displayFNDNumbers(answer); // fnd 수정해야함
-        displayDotMatrixAnimation(); // 게임 오버 애니메이션으로 수정해야함
+        // displayDotMatrixAnimation(); // 게임 오버 애니메이션으로 수정해야함
         // updateLEDs(0); // led 수정해야함
     }
 }
@@ -126,7 +127,7 @@ void playGame() {
 // 이거가 사용자가 숫자를 입력하는 함수인데, keypad를 활용할 수 있게 수정해야함
 void getInput(int *input) {
     printf("Enter your guess (4 digits): ");
-    scanf("%1d%1d%1d%1d", &input[0], &input[1], &input[2], &input[3]);
+    scanf("%1d%1d%1d%1d", &input[0], &input[1], &input[2], &input[3]); // keypad로 받을수있게.
 }
 
 void checkGuess(int *guess) {
@@ -154,9 +155,9 @@ void checkGuess(int *guess) {
     char buf2[100];
     snprintf(buf2, sizeof(buf2), "%dS %dB", strikes, balls);
 
-    displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2); //CLCD 수정완료
+    // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2); //CLCD 수정완료
     // displayFNDNumbers(guess); //수정해야함
-    displayDotMatrixAnimation(); //35초 타이머 애니메이션 돌아감
+    // displayDotMatrixAnimation(); //35초 타이머 애니메이션 돌아감
     // updateLEDs(numLives); //수정해야함
 
     checkLastInning();
