@@ -41,27 +41,25 @@ int main(void){
 		close(fd); printf("mmap error in fnd_init()\n"); return -1;
 	}
 
-	printf("\n  7Segment Counter\n");
-	printf("---------------------------\n");
-	printf("  r to restart   the counter\n");
-	printf("  s to stop     the counter\n");
-	printf("  c to continue the counter\n");
-	printf("  q for quit\n");
-	
 	init_keyboard();
-	cmd='r';
+	  //cmd='r';  ??
 	fnd_clear();
 
 	while(cmd!='q'){ 
+	//step 1  
 		if (cmd != 's') { 
-			fnd_display(count, 2);
-			usleep(500000); 
-			count[0]++; 
-			if (count[0] > 9) { 
-				count[0] = 0; count[1]++; 
-				if (count[1] > 9) {
-					count[0] = count[1] = 0;
-				}
+
+    	count[0] = count[1] = count[2] = count[3] = count[4] = count[5] = count[6] = count[7] = 0 ;
+        fnd_display(count, 8);
+        usleep(1000000);
+        fnd_clear();
+        usleep(1000000);
+		}
+	//step 2
+		if ()
+		count[4] 
+
+
 			} 
 		} 
 
