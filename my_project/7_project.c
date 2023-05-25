@@ -2,7 +2,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <string.h>
-#include <pthread.h>
 #include "device.h"
 
 #define MAX_INNINGS 9
@@ -30,19 +29,12 @@ void updateLastInning(int inning, int strikes, int balls);
 void showLastInning(int inning);
 void displayFNDNumbers(int *numbers);
 
-// thread functions
-void run_in_parallel(void *(*func1)(void *), void *(*func2)(void *), void *(*func3)(void *), void *(*func4)(void *), void *(*func5)(void *));
-void *DOT_Timer_Thread(void *arg);
-void *DOT_Baseball_Thread(void *arg);
-void *CLCD_Display_Thread(void *arg);
-// void *Thread_Func3(void *arg);
-// void *Thread_Func4(void *arg);
-// void *Thread_Func5(void *arg);
+
 
 
 // general functions define
 int main() {
-    // devices initialization 완료
+    // devices initialization
     int result = initDevices(DEVICE_ALL);
 	if (result == FAIL_MEMORY_OPEN) {
 		perror("Could not open 'dev/mem'.");
@@ -55,28 +47,27 @@ int main() {
 		return -1;
 	}
     
-    printf("Game Start!\n");
-
-    initializeGame();
-    printf("initialize test finish");
-    // playGame();
-
-    // 병렬처리 예시 
-    // run_in_parallel(DOT_Timer_Thread, CLCD_Display_Thread,NULL, NULL, NULL);
+    //game start
+    printf("toggle before");
+    All_FND_toggle();
+    
+    // initializeGame();
+    // playGame()e;
 
     return 0;
 }
 
 void initializeGame() {
+    int i, len1 = 14, len2 = 11, CG_or_DD = 1;
+    char buf1[100]="Bulls and Cows", buf2[100]="Press Enter";
     srand(time(NULL)); // 시간을 기반으로 난수 생성기 초기화
     generateAnswer();
-    printf("Answer testing: %d%d%d%d\n", answer[0], answer[1], answer[2], answer[3]);
+    
     // Additional initialization code for new components
-    // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
-    run_in_parallel(DOT_Baseball_Thread, CLCD_Display_Thread,NULL, NULL, NULL);
+    displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
     usleep(3000000);
     // displayFNDNumbers(answer);
-    // displayDotMatrixAnimation();
+    displayDotMatrixAnimation();
     // updateLEDs(numLives);
 }
 
@@ -109,9 +100,9 @@ void playGame() {
             // 정답인 경우
             printf("Congratulations! You won the game in %d innings.\n", currentInning);
             // Additional code for new components
-            // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
+            displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
             // displayFNDNumbers(answer);
-            // displayDotMatrixAnimation();
+            displayDotMatrixAnimation();
             // updateLEDs(numLives);
             break;
         } else {
@@ -128,9 +119,9 @@ void playGame() {
         // 게임 오버
         printf("Game over! You lost the game.\n");
         // Additional code for new components
-        // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
+        displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
         // displayFNDNumbers(answer); // fnd 수정해야함
-        // displayDotMatrixAnimation(); // 게임 오버 애니메이션으로 수정해야함
+        displayDotMatrixAnimation(); // 게임 오버 애니메이션으로 수정해야함
         // updateLEDs(0); // led 수정해야함
     }
 }
@@ -138,7 +129,7 @@ void playGame() {
 // 이거가 사용자가 숫자를 입력하는 함수인데, keypad를 활용할 수 있게 수정해야함
 void getInput(int *input) {
     printf("Enter your guess (4 digits): ");
-    scanf("%1d%1d%1d%1d", &input[0], &input[1], &input[2], &input[3]); // keypad로 받을수있게.
+    scanf("%1d%1d%1d%1d", &input[0], &input[1], &input[2], &input[3]);
 }
 
 void checkGuess(int *guess) {
@@ -166,9 +157,9 @@ void checkGuess(int *guess) {
     char buf2[100];
     snprintf(buf2, sizeof(buf2), "%dS %dB", strikes, balls);
 
-    // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2); //CLCD 수정완료
+    displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2); //CLCD 수정완료
     // displayFNDNumbers(guess); //수정해야함
-    // displayDotMatrixAnimation(); //35초 타이머 애니메이션 돌아감
+    displayDotMatrixAnimation(); //35초 타이머 애니메이션 돌아감
     // updateLEDs(numLives); //수정해야함
 
     checkLastInning();
@@ -205,73 +196,3 @@ void showLastInning(int inning) {
         printf("Invalid inning number.\n");
     }
 }
-
-
-// thread functions declare
-
-// The generic function to run any two functions in parallel
-void run_in_parallel(void *(*func1)(void *), void *(*func2)(void *), void *(*func3)(void *), void *(*func4)(void *), void *(*func5)(void *)) {
-    pthread_t tid1, tid2, tid3, tid4, tid5;
-
-    int t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
-
-    if (func1 && pthread_create(&tid1, NULL, func1, NULL) == 0) {
-        t1 = 1;
-    }
-
-    if (func2 && pthread_create(&tid2, NULL, func2, NULL) == 0) {
-        t2 = 1;
-    }
-
-    if (func3 && pthread_create(&tid3, NULL, func3, NULL) == 0) {
-        t3 = 1;
-    }
-
-    if (func4 && pthread_create(&tid4, NULL, func4, NULL) == 0) {
-        t4 = 1;
-    }
-
-    if (func5 && pthread_create(&tid5, NULL, func5, NULL) == 0) {
-        t5 = 1;
-    }
-
-    if (t1) {
-        pthread_join(tid1, NULL);
-    }
-
-    if (t2) {
-        pthread_join(tid2, NULL);
-    }
-
-    if (t3) {
-        pthread_join(tid3, NULL);
-    }
-
-    if (t4) {
-        pthread_join(tid4, NULL);
-    }
-
-    if (t5) {
-        pthread_join(tid5, NULL);
-    }
-}
-
-
-void *DOT_Timer_Thread(void *arg) {
-    DOT_Timer();
-    return NULL;
-}
-
-void *DOT_Baseball_Thread(void *arg) {
-    DOT_Display_Baseball();
-    return NULL;
-}
-
-void *CLCD_Display_Thread(void *arg) {
-    // Parameters would normally be passed via arg, but for simplicity, I'll define them directly here
-    int len1 = 14, len2 = 11, CG_or_DD = 1;
-    char buf1[100]="Bulls and Cows", buf2[100]="Press Enter";
-    CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
-    return NULL;
-}
-
