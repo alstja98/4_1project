@@ -47,8 +47,6 @@ void closeDOT();
 void DOT_Timer();
 void DOT_Display_Baseball();
 
-
-
 int initCLCD(int fd);
 void closeCLCD();
 void CLCD_SET_COMMAND(ushort command);
@@ -128,12 +126,12 @@ ushort DOT_TABLE[43][5] = {
 	{0x7F, 0x7F, 0x7F, 0x7F, 0x7F },
     {0x7F, 0x89, 0x89, 0x89, 0x26 }, // B
     {0x7E, 0x09, 0x09, 0x09, 0x7E }, // A
-    {0x4F, 0x49, 0x49, 0x49, 0x79}, //S
-    {0x7F, 0x49, 0x49, 0x49, 0x49}, //E
+    {0x4F, 0x49, 0x49, 0x49, 0x79 }, // S
+    {0x7F, 0x49, 0x49, 0x49, 0x49 }, // E
     {0x7F, 0x89, 0x89, 0x89, 0x26 }, // B
     {0x7E, 0x09, 0x09, 0x09, 0x7E }, // A
-    {0x7F, 0x40, 0x40, 0x40, 0x40 },  // L
-    {0x7F, 0x40, 0x40, 0x40, 0x40 },  // L
+    {0x7F, 0x40, 0x40, 0x40, 0x40 }, // L
+    {0x7F, 0x40, 0x40, 0x40, 0x40 }, // L
 };
 
 // CLCD variables
@@ -267,7 +265,7 @@ char getch()
 //
 // LED functions
 //
-int initLED(int fd)
+int initLED(int fd) // LED 초기화 함수
 {
 	LED = (LEDPTR*)mmap(NULL, 2, PROT_WRITE, MAP_SHARED, fd, FPGA_LED);
 	if (LED == MAP_FAILED) {
@@ -279,7 +277,7 @@ int initLED(int fd)
 	return SUCCESS;
 }
 
-void closeLED()
+void closeLED() // LED 닫는 함수
 {
 	if (LED == 0) return;
 	munmap(LED, 2);
@@ -287,25 +285,25 @@ void closeLED()
 	printf("LED was closed.\n");
 }
 
-void AllLED_On()
+void AllLED_On() //모든 LED 켜는 함수
 {
 	if (LED == 0) return;
 	*((ushort*)LED) = 0x0000;
 }
 
-void AllLED_Off()
+void AllLED_Off() //모든 LED 끄는 함수
 {
 	if (LED == 0) return;
 	*((ushort*)LED) = 0x00FF;
 }
 
-void AllLED_Toggle()
+void AllLED_Toggle() //모든 LED 반전하는 함수
 {
 	if (LED == 0) return;
 	*((ushort*)LED) = 0x00FF & ~*((ushort*)LED);
 }
 
-void LEDOnFromTop(int count)
+void LEDOnFromTop(int count) //위에서부터 LED 켜는 함수
 {
 	ushort led = 1U;
 	while (count-- > 0)
@@ -314,8 +312,27 @@ void LEDOnFromTop(int count)
 		led = (led << 1) | 1U;
 	}
 }
+void TurnOffTopLED() //가장 위에 켜져 있는 LED 하나를 끄는 함수
+{
+    if (LED == 0) return;
 
-void LEDOnFromBottom(int count)
+    ushort led_status = *((ushort*)LED);
+    ushort led_mask = 1U << (LED_COUNT - 1); // LED_COUNT는 LED 개수를 의미함. 이 경우 8이라 가정.
+
+    // 가장 위에 있는 켜져 있는 LED를 찾기 위해 비트마스크를 오른쪽으로 시프트함.
+    while (led_mask > 0) {
+        if ((led_status & led_mask) == 0) { // LED가 켜져 있다면
+            led_status |= led_mask; // 해당 LED를 끔.
+            break;
+        }
+        led_mask >>= 1; // 다음 LED로 이동.
+    }
+
+    // LED 상태 업데이트.
+    *((ushort*)LED) = led_status;
+}
+
+void LEDOnFromBottom(int count) //아래에서부터 LED 켜는 함수
 {
 	ushort led = 0x0080U;
 	while (count-- > 0)
@@ -325,6 +342,44 @@ void LEDOnFromBottom(int count)
 	}
 }
 
+void ALLLED_Blink(){
+	if (LED == 0) return;
+
+    for (int i = 0; i < 10; ++i) {
+        AllLED_On();
+        usleep(500000); // 0.5초 동안 대기합니다.
+        AllLED_Off();
+        usleep(500000); // 다시 0.5초 동안 대기합니다.
+    }
+}
+
+void AlternateLEDBlink() { //1,3,5,7 번째와 2,4,6번쨰 LED 번갈아 출력
+	if (LED == 0) return;
+
+	for (int i = 0; i < 10; ++i) {
+			// 1, 3, 5, 7 번째 LED 켜기
+			LED->LED0 = 1;
+			LED->LED2 = 1;
+			LED->LED4 = 1;
+			LED->LED6 = 1;
+			// 2, 4, 6 번째 LED 끄기
+			LED->LED1 = 0;
+			LED->LED3 = 0;
+			LED->LED5 = 0;
+			usleep(500000); 
+
+			// 2, 4, 6 번째 LED 켜기
+			LED->LED1 = 1;
+			LED->LED3 = 1;
+			LED->LED5 = 1;
+			// 1, 3, 5, 7 번째 LED 끄기
+			LED->LED0 = 0;
+			LED->LED2 = 0;
+			LED->LED4 = 0;
+			LED->LED6 = 0;
+			sleep(500000); 
+		}
+}
 
 
 //
