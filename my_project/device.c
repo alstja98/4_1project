@@ -41,7 +41,16 @@ void closeLED();
 
 int initFND(int fd);
 void closeFND();
-void All_FND_toggle(void);
+
+//숫자야구용 fnd function -u
+void All_FND_toggle(void); //완
+
+/*미완 (확인안됨)
+void FND_BACK4_8();
+void FND_Shuffle();
+void FND_Show_ANswere();
+*/
+
 
 int initDOT(int fd);
 void closeDOT();
@@ -86,7 +95,6 @@ ushort FND_TABLE[16] = {
 	0x39, 0x5E, 0x79, 0x71
 };
 
-unsigned char count[8]={0,0,0,0,0,0,0,0};
 
 
 
@@ -380,20 +388,7 @@ void closeFND()
 	printf("FND was closed.\n");
 }
 
-// added function -u 
-void AllFND_on()
-{
-	if(!isFNDInitialized) return;
 
-	*pFND[0] = 0x7F;
-	*pFND[1] = 0x7F;
-	*pFND[2] = 0x7F;
-	*pFND[3] = 0x7F;
-	*pFND[4] = 0x7F;
-	*pFND[5] = 0x7F;
-	*pFND[6] = 0x7F;
-	*pFND[7] = 0x7F;
-}
 void AllFND_Clear()
 {
 	if (!isFNDInitialized) return;
@@ -412,7 +407,7 @@ void FND_Clear(int index)
 {
 	if (!isFNDInitialized || (index < 0) || (index > 7)) return;
 	*pFND[index] = 0x00;
-}*/
+}
 
 void FND_Set(int index, int no)
 {
@@ -434,16 +429,58 @@ void FND_DrawNumber(int number)
 		number = number / 10;
 	}
 }
-//-u
+// 숫자야구용 fnd function -u 
 void All_FND_toggle(){
 
-	
         	AllFND_on()
         	usleep(1000000);
         	fnd_Clear();
         	usleep(1000000);
 			
 }
+
+void AllFND_on()
+{
+	if(!isFNDInitialized) return;
+
+	*pFND[0] = 0x7F;
+	*pFND[1] = 0x7F;
+	*pFND[2] = 0x7F;
+	*pFND[3] = 0x7F;
+	*pFND[4] = 0x7F;
+	*pFND[5] = 0x7F;
+	*pFND[6] = 0x7F;
+	*pFND[7] = 0x7F;
+}
+/* 테스트 해봐야함
+void FND_BACK4_8()
+{
+    if (!isFNDInitialized) return;
+
+    for (int i = 0; i < 4; i++) {
+
+        *pFND[i] = FND_TABLE[8];
+	}
+}
+
+void FND_suffle()
+{
+		if (!isFNDInitialized) return;
+
+    
+    for(int count = 0;count<20;count++)
+    {
+        *pFND[0] = FND_TABLE[count%10];
+        *pFND[1] = FND_TABLE[count%10];
+        *pFND[2] = FND_TABLE[count%10];
+        *pFND[3] = FND_TABLE[count%10];
+        
+        usleep(500000); // 0.5초 딜레이
+		
+    }
+}
+*/	
+
 //
 // DOT functions
 //
