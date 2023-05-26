@@ -43,13 +43,11 @@ int initFND(int fd);
 void closeFND();
 
 //숫자야구용 fnd function -u
-void All_FND_toggle(void); //완
-
-/*미완 (확인안됨)
-void FND_BACK4_8();
-void FND_Shuffle();
-void FND_Show_ANswere();
-*/
+void All_FND_toggle(void); //컴파일 확인
+void FND_BACK4_8();//컴파일 확인
+void FND_Shuffle();//컴파일 확인
+void FND_Show_Answere_win();//컴파일 확인
+void FND_Show_Answere_lose();//컴파일 확인
 
 
 int initDOT(int fd);
@@ -430,14 +428,6 @@ void FND_DrawNumber(int number)
 	}
 }
 // 숫자야구용 fnd function -u 
-void All_FND_toggle(){
-
-        	AllFND_on()
-        	usleep(1000000);
-        	fnd_Clear();
-        	usleep(1000000);
-			
-}
 
 void AllFND_on()
 {
@@ -452,23 +442,39 @@ void AllFND_on()
 	*pFND[6] = 0x7F;
 	*pFND[7] = 0x7F;
 }
-/* 테스트 해봐야함
+
+void All_FND_toggle(){
+
+while (1){
+        	AllFND_on();
+        	usleep(1000000);
+        	AllFND_Clear();        	
+        	usleep(1000000);
+	}		
+}
+
+
+
 void FND_BACK4_8()
 {
     if (!isFNDInitialized) return;
 
-    for (int i = 0; i < 4; i++) {
+	int i ;
+	
+    for (i = 0; i < 4; i++) {
 
         *pFND[i] = FND_TABLE[8];
 	}
 }
 
-void FND_suffle()
+
+void FND_shuffle()
 {
 		if (!isFNDInitialized) return;
 
+    int count ;
     
-    for(int count = 0;count<20;count++)
+    for(count = 0;count<20;count++)
     {
         *pFND[0] = FND_TABLE[count%10];
         *pFND[1] = FND_TABLE[count%10];
@@ -479,7 +485,41 @@ void FND_suffle()
 		
     }
 }
-*/	
+
+void FND_Show_Answere_win()
+{
+	if (!isFNDInitialized) return;
+	
+	*pFND[0] = FND_TABLE[1/*answer[3]*/];
+	*pFND[1] = FND_TABLE[2/*answer[2]*/];
+	*pFND[2] = FND_TABLE[3/*answer[1]*/];
+	*pFND[3] = FND_TABLE[4/*answer[0]*/];
+
+	while(1){
+	*pFND[4] = FND_TABLE[1/*itput[3]*/];
+	*pFND[5] = FND_TABLE[2/*input[2]*/];
+	*pFND[6] = FND_TABLE[3/*input[1]*/];
+	*pFND[7] = FND_TABLE[4/*input[0]*/];
+	usleep(1000000)
+	}
+}
+
+void FND_Show_Answere_lose()
+{
+	if (!isFNDInitialized) return;
+	
+	*pFND[0] = FND_TABLE[1/*answer[3]*/];
+	*pFND[1] = FND_TABLE[2/*answer[2]*/];
+	*pFND[2] = FND_TABLE[3/*answer[1]*/];
+	*pFND[3] = FND_TABLE[4/*answer[0]*/];
+	
+	*pFND[4] = FND_TABLE[0];
+	*pFND[5] = FND_TABLE[0];
+	*pFND[6] = FND_TABLE[0];
+	*pFND[7] = FND_TABLE[0];
+	
+}
+
 
 //
 // DOT functions
