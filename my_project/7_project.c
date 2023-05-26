@@ -64,10 +64,10 @@ void initializeGame() {
     generateAnswer();
     
     // Additional initialization code for new components
-    displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
+    // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
     usleep(3000000);
     // displayFNDNumbers(answer);
-    displayDotMatrixAnimation();
+    // displayDotMatrixAnimation();
     // updateLEDs(numLives);
 }
 
@@ -100,9 +100,9 @@ void playGame() {
             // 정답인 경우
             printf("Congratulations! You won the game in %d innings.\n", currentInning);
             // Additional code for new components
-            displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
+            // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
             // displayFNDNumbers(answer);
-            displayDotMatrixAnimation();
+            // displayDotMatrixAnimation();
             // updateLEDs(numLives);
             break;
         } else {
@@ -119,9 +119,9 @@ void playGame() {
         // 게임 오버
         printf("Game over! You lost the game.\n");
         // Additional code for new components
-        displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
+        // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
         // displayFNDNumbers(answer); // fnd 수정해야함
-        displayDotMatrixAnimation(); // 게임 오버 애니메이션으로 수정해야함
+        // displayDotMatrixAnimation(); // 게임 오버 애니메이션으로 수정해야함
         // updateLEDs(0); // led 수정해야함
     }
 }
@@ -157,9 +157,9 @@ void checkGuess(int *guess) {
     char buf2[100];
     snprintf(buf2, sizeof(buf2), "%dS %dB", strikes, balls);
 
-    displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2); //CLCD 수정완료
+    // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2); //CLCD 수정완료
     // displayFNDNumbers(guess); //수정해야함
-    displayDotMatrixAnimation(); //35초 타이머 애니메이션 돌아감
+    // displayDotMatrixAnimation(); //35초 타이머 애니메이션 돌아감
     // updateLEDs(numLives); //수정해야함
 
     checkLastInning();
