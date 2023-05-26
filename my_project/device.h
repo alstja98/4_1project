@@ -124,6 +124,9 @@ extern void			LEDOnFromBottom(int count);
 extern void			AllLED_On();
 extern void			AllLED_Off();
 extern void			AllLED_Toggle();
+extern void			ALLLED_Blink();
+extern void			AlternateLEDBlink();
+extern void 		TurnOffTopLED();
 
 // 7-Segments functions
 extern void			AllFND_Clear();
