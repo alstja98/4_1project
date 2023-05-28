@@ -121,6 +121,10 @@ void playGame() {
         // 게임 오버
         printf("Game over! You lost the game.\n");
         // Additional code for new components
+        // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
+        // displayFNDNumbers(answer); // fnd 수정해야함
+        // displayDotMatrixAnimation(); // 게임 오버 애니메이션으로 수정해야함
+        // updateLEDs(0); // led 수정해야함
     }
 }
 
@@ -153,6 +157,11 @@ void checkGuess(int *guess) {
     snprintf(buf1, sizeof(buf1), "%d inning", currentInning);
     char buf2[100];
     snprintf(buf2, sizeof(buf2), "%dS %dB", strikes, balls);
+
+    // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2); //CLCD 수정완료
+    // displayFNDNumbers(guess); //수정해야함
+    // displayDotMatrixAnimation(); //35초 타이머 애니메이션 돌아감
+    // updateLEDs(numLives); //수정해야함
 
     checkLastInning();
 }
