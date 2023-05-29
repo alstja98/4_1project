@@ -542,6 +542,7 @@ void DOT_Write_Decimal(int no)
 
 // 숫자야구 dot matrix 짠거
 void DOT_Timer(){
+	DOT_Clear();
     int i;
     for(i=36; i>=0; i--){
         DOT_Write(DOT_TABLE[i]);
@@ -550,6 +551,7 @@ void DOT_Timer(){
 }
 
 void DOT_Display_Baseball() {
+	DOT_Clear();
     for(int i = 37; i <= 45; i++){
         DOT_Write(DOT_TABLE[i]);
         usleep(500000); // 0.5초마다 표시

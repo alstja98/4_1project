@@ -64,7 +64,8 @@ int main() {
     // run_in_parallel(CLCD_Display_Thread_Ingame, NULL, NULL, NULL, NULL);
     printf("initialize test finish");
     // playGame();
-
+    DOT_Clear();
+	closeDevices();
     return 0;
 }
 
@@ -74,8 +75,14 @@ void initializeGame() { // 1단계
     printf("Answer testing: %d%d%d%d\n", answer[0], answer[1], answer[2], answer[3]); // answer 잘 만들어지는지 테스트
 
     run_in_parallel(DOT_Baseball_Thread, CLCD_Display_Thread, ALLLED_Blink, NULL, NULL);
-    // fnd, touchpad
-    // touchpad의 enter를 누를 시에 playGame()으로 이동해야함
+    while (1) {
+        if (IsKeypadPressed(3, 2)) { // Enter (3,2)위치의 버튼을 누르면
+            playGame();
+            break;
+        }
+        usleep(1000); // Wait for a bit to prevent excessive CPU usage
+    }
+    // touchpad의 enter를 누를 시에 playGame()으로 이동해야함 - 완료
     // led는 우선 모든 요소가 1초 간격으로 깜박이게 출력하게 임시로 테스트
     // led는 1,3,5,7 번쨰와 2,4,6 번째 LED가 1초 간격으로 서로 번갈아가도록 출력
     // fnd는 모든 요소가 1초간격으로 깜박이게 출력
