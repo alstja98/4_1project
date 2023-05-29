@@ -21,8 +21,12 @@ unsigned short *FND0, *FND1, *FND2, *FND3, *FND4, *FND5, *FND6, *FND7;
 
 int fd, fd0=0;
 
+//추가
+char count[8]={0,0,0,0,0,0,0,0};
+time_t start_time, current_time;
+
 int fnd_init(void); 
-void fnd_clear(void);
+void fnd_clear_all(void);
 void fnd_exit(void);
 void init_keyboard(void);
 int kbhit(void);
@@ -31,10 +35,15 @@ void close_keyboard(void);
 unsigned char hexn2fnd(char ch);
 void fnd_display(char *hexadecimal, int N);
 
+// 추가 
+void FNDBACK8 (void);
+void All_FND_toggle(void);
+void show_answer(void);
+void fnd_clear_front4(void);
+
 int main(void){
 	int dev,i;   char cmd;
-	unsigned char count[8]={0,0,0,0,0,0,0,0}; unsigned short tmp1, tmp2;
-	time_t start_time, current_time;
+	unsigned short tmp1, tmp2;
 
 	if((fd=open("/dev/mem",O_RDWR|O_SYNC))<0){ 
 		perror("failed Opening FND (using mmap)! \n"); exit(1);
@@ -46,24 +55,87 @@ int main(void){
 
 	init_keyboard();
 	    cmd='r';
-	fnd_clear();
+	fnd_clear_all();
 
-	//step 1 : 게임시작 시
-	while(cmd!='q'){   
+	
+	while(cmd!='q'){ 
 
-		if (cmd == 'a') { 				
-    	count[0] = count[1] = count[2] = count[3] = count[4] = count[5] = count[6] = count[7] = 8 ;
-        fnd_display(count, 8);
-        usleep(1000000);
-        fnd_clear();
-        usleep(1000000);
+		while(1){
+		void All_FND_toggle();
+		if(cmd=='b')
+		break;
 		}
-
+		 			
 		usleep(10);
 	
-//step 2  :  step1 에서 Enter 입력시 
 		if (cmd == 'b') {
-				start_time = time(NULL);
+				void FNDBACK8();
+				if(cmd=='c')
+				break;
+		} 
+		
+		if (cmd == 'c'){
+
+			void show_answer_win();
+		if(cmd=='q')
+		break;
+		}
+
+
+		usleep(10); 
+		if (kbhit()) { 
+			cmd = readch(); 
+			if (cmd == 'r') {
+				fnd_clear_all();
+				count[0] = count[1] = count[2] = count[3] = 0;
+			}
+		}
+	}
+	close_keyboard();
+	fnd_exit();
+}
+
+int fnd_init(void){
+	int ierr=0;
+	FND0=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS0); ierr+=(int)FND0;
+	FND1=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS1); ierr+=(int)FND1;
+	FND2=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS2); ierr+=(int)FND2;
+	FND3=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS3); ierr+=(int)FND3;
+	FND4=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS4); ierr+=(int)FND4;
+	FND5=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS5); ierr+=(int)FND5;
+	FND6=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS6); ierr+=(int)FND6;
+	FND7=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS7); ierr+=(int)FND7;
+	return ierr;
+}
+
+
+
+void show_answer_win(void){
+	if(strikes == 4 ){
+		count[7] = count[3] = 1;//answer[3];
+		count[6] = count[2] = 2;//answer[2];
+		count[5] = count[1] = 3;//answer[1];
+		count[4] = count[0] = 4;//answer[0];
+
+		fnd_display(count,8);
+		usleep(1000000);
+		fnd_clear_front4();
+		usleep(1000000);
+	}
+}
+void All_FND_toggle(){
+
+	count[0] = count[1] = count[2] = count[3] = count[4] = count[5] = count[6] = count[7] = 8 ;
+        	fnd_display(count, 8);
+        	usleep(1000000);
+        	fnd_clear_all();
+        	usleep(1000000);
+			
+}
+
+void FNDBACK8 (){
+
+	start_time = time(NULL);
 			while(1){
 
 				current_time = time(NULL);
@@ -88,36 +160,11 @@ int main(void){
 					fnd_display(count,4) ;
 				} 
 			}
-			 
-		} 
-		
 
-
-		usleep(10); 
-		if (kbhit()) { 
-			cmd = readch(); 
-			if (cmd == 'r') {
-				fnd_clear();
-				count[0] = count[1] = 0;
-			}
-		}
-	}
-	close_keyboard();
-	fnd_exit();
 }
 
-int fnd_init(void){
-	int ierr=0;
-	FND0=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS0); ierr+=(int)FND0;
-	FND1=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS1); ierr+=(int)FND1;
-	FND2=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS2); ierr+=(int)FND2;
-	FND3=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS3); ierr+=(int)FND3;
-	FND4=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS4); ierr+=(int)FND4;
-	FND5=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS5); ierr+=(int)FND5;
-	FND6=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS6); ierr+=(int)FND6;
-	FND7=mmap(NULL,2,PROT_WRITE,MAP_SHARED,fd,FND_CS7); ierr+=(int)FND7;
-	return ierr;
-}
+
+
 
 void init_keyboard(void){ 
 	tcgetattr(fd0,&initial_settings);
@@ -189,13 +236,17 @@ void fnd_display(char *hexadecimal, int N){
 	if(N>=8) *FND7=hexn2fnd(hexadecimal[7]);
 }
 
-void fnd_clear(void){
+void fnd_clear_all(void){
 	*FND0=0x00; *FND1=0x00; *FND2=0x00; *FND3=0x00;
 	*FND4=0x00; *FND5=0x00; *FND6=0x00; *FND7=0x00;
 }
 
+void fnd_clear_front4(void){
+	*FND4=0x00; *FND5=0x00; *FND6=0x00; *FND7=0x00;
+}
+
 void fnd_exit(void){
-	fnd_clear();
+	fnd_clear_all();
 	munmap(FND0,2); munmap(FND1,2); munmap(FND2,2); munmap(FND3,2);
 	munmap(FND4,2); munmap(FND5,2); munmap(FND6,2); munmap(FND7,2);
 	close(fd);

@@ -41,6 +41,7 @@ void closeLED();
 
 int initFND(int fd);
 void closeFND();
+void All_FND_toggle(void);
 
 int initDOT(int fd);
 void closeDOT();
@@ -82,6 +83,10 @@ ushort FND_TABLE[16] = {
 	0x7F, 0x67, 0x77, 0x7C,
 	0x39, 0x5E, 0x79, 0x71
 };
+
+unsigned char count[8]={0,0,0,0,0,0,0,0};
+
+
 
 // DOT variables
 bool isDOTInitialized = FALSE;
@@ -430,6 +435,20 @@ void closeFND()
 	printf("FND was closed.\n");
 }
 
+// added function -u 
+void AllFND_on()
+{
+	if(!isFNDInitialized) return;
+
+	*pFND[0] = 0x7F;
+	*pFND[1] = 0x7F;
+	*pFND[2] = 0x7F;
+	*pFND[3] = 0x7F;
+	*pFND[4] = 0x7F;
+	*pFND[5] = 0x7F;
+	*pFND[6] = 0x7F;
+	*pFND[7] = 0x7F;
+}
 void AllFND_Clear()
 {
 	if (!isFNDInitialized) return;
@@ -448,7 +467,7 @@ void FND_Clear(int index)
 {
 	if (!isFNDInitialized || (index < 0) || (index > 7)) return;
 	*pFND[index] = 0x00;
-}
+}*/
 
 void FND_Set(int index, int no)
 {
@@ -470,7 +489,16 @@ void FND_DrawNumber(int number)
 		number = number / 10;
 	}
 }
+//-u
+void All_FND_toggle(){
 
+	
+        	AllFND_on()
+        	usleep(1000000);
+        	fnd_Clear();
+        	usleep(1000000);
+			
+}
 //
 // DOT functions
 //
@@ -915,3 +943,4 @@ bool IsKeypadPressed(int col, int row)
 	ushort target = (1 << row);
 	return (keyin & target) == target;
 }
+

@@ -2,7 +2,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <string.h>
-#include <pthread.h>
 #include "device.h"
 
 #define MAX_INNINGS 9
@@ -132,13 +131,17 @@ void playGame() {
         // 게임 오버
         printf("Game over! You lost the game.\n");
         // Additional code for new components
+        // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
+        // displayFNDNumbers(answer); // fnd 수정해야함
+        // displayDotMatrixAnimation(); // 게임 오버 애니메이션으로 수정해야함
+        // updateLEDs(0); // led 수정해야함
     }
 }
 
 // 이거가 사용자가 숫자를 입력하는 함수인데, keypad를 활용할 수 있게 수정해야함
 void getInput(int *input) {
     printf("Enter your guess (4 digits): ");
-    scanf("%1d%1d%1d%1d", &input[0], &input[1], &input[2], &input[3]); // keypad로 받을수있게.
+    scanf("%1d%1d%1d%1d", &input[0], &input[1], &input[2], &input[3]);
 }
 
 void checkGuess(int *guess) {
