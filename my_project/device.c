@@ -41,7 +41,7 @@ void closeLED();
 
 int initFND(int fd);
 void closeFND();
-void All_FND_toggle(void);
+void All_FND_Blink(void);
 
 int initDOT(int fd);
 void closeDOT();
@@ -490,13 +490,13 @@ void FND_DrawNumber(int number)
 	}
 }
 //-u
-void All_FND_toggle(){
+void All_FND_Blink(){
 
 	
         	AllFND_on()
-        	usleep(1000000);
-        	fnd_Clear();
-        	usleep(1000000);
+        	usleep(500000);
+        	AllFND_Clear();
+        	usleep(500000);
 			
 }
 //
