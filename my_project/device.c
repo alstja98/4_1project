@@ -41,10 +41,10 @@ void closeLED();
 
 int initFND(int fd);
 void closeFND();
-void All_FND_Blink(void);
 
 int initDOT(int fd);
 void closeDOT();
+void DOT_ALL();
 void DOT_Timer();
 void DOT_Display_Baseball();
 
@@ -386,6 +386,18 @@ void AlternateLEDBlink() { //1,3,5,7 번째와 2,4,6번쨰 LED 번갈아 출력
 		}
 }
 
+void LEDOnFromBottomBasedOnLives(int numLives) { // numLives에 따라 아래에서부터 LED 켜는 함수
+	if (LED == 0 || numLives < 0 || numLives > 8) return;
+
+	ushort led = 0x0080U; // 첫번째 LED 위치
+	for (int i = 0; i < numLives; i++)
+	{
+		*((ushort*)LED) = 0x00FF & ~led;
+		led = (led >> 1) | 0x0080;
+	}
+}
+
+
 
 //
 // 7-Segment functions
@@ -475,30 +487,31 @@ void FND_Set(int index, int no)
 	*pFND[index] = FND_TABLE[no];
 }
 
-void FND_DrawNumber(int number)
+void FND_DrawNumber(int index, int val) // 사용자가 입력한 숫자를 fnd에 표시
 {
 	if (!isFNDInitialized) return;
-
-	int index = 0, val = 0;
-	while (number != 0)
-	{
-		val = number % 10;
-		FND_Set(index, val);
-
-		index++;
-		number = number / 10;
-	}
+	FND_Clear(index);
+	FND_Set(index, val);
 }
-//-u
-void All_FND_Blink(){
 
-	
+// devu
+void All_FND_Blink(){
         	AllFND_on()
         	usleep(500000);
         	AllFND_Clear();
         	usleep(500000);
-			
 }
+
+void Back4_FND_On()
+{
+	if(!isFNDInitialized) return;
+	AllFND_Clear();
+	*pFND[4] = 0x7F;
+	*pFND[5] = 0x7F;
+	*pFND[6] = 0x7F;
+	*pFND[7] = 0x7F;
+}
+
 //
 // DOT functions
 //
@@ -569,6 +582,11 @@ void DOT_Write_Decimal(int no)
 
 
 // 숫자야구 dot matrix 짠거
+void DOT_ALL(){
+	//DOT 모두 켜짐
+	DOT_Write(DOT_TABLE[36]);
+}
+
 void DOT_Timer(){
 	DOT_Clear();
     int i;

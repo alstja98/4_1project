@@ -127,12 +127,15 @@ extern void			AllLED_Toggle();
 extern void			ALLLED_Blink();
 extern void			AlternateLEDBlink();
 extern void 		TurnOffTopLED();
+extern void 		LEDOnFromBottomBasedOnLives(int numLives);
 
 // 7-Segments functions
 extern void			AllFND_Clear();
+extern void			Back4_FND_On();
+extern void 		All_FND_Blink();
 extern void			FND_Clear(int index);
 extern void			FND_Set(int index, int no);
-extern void			FND_DrawNumber(int number);
+extern void			FND_DrawNumber(int index, int val);
 
 // DOT-Matrix functions
 extern void			DOT_Clear();
