@@ -32,6 +32,7 @@ void displayFNDNumbers(int *numbers);
 // thread functions
 void run_in_parallel(void *(*func1)(void *), void *(*func2)(void *), void *(*func3)(void *), void *(*func4)(void *), void *(*func5)(void *));
 void *ALLLED_Blink(void *arg);
+void *All_FND_Blink(void *arg);
 void *DOT_Timer_Thread(void *arg);
 void *DOT_Baseball_Thread(void *arg);
 void *CLCD_Display_Thread(void *arg);
@@ -256,11 +257,19 @@ void run_in_parallel(void *(*func1)(void *), void *(*func2)(void *), void *(*fun
     }
 }
 
+// led threads
 void *ALLLED_Blink(void *arg) {
     ALLLED_Blink();
     return NULL;
 }
 
+// fnd threads
+void *All_FND_Blink(void *arg) {
+    All_FND_Blink();
+    return NULL;
+}
+
+// dot threads
 void *DOT_Timer_Thread(void *arg) {
     DOT_Timer();
     return NULL;
@@ -271,6 +280,7 @@ void *DOT_Baseball_Thread(void *arg) {
     return NULL;
 }
 
+// clcd threads
 void *CLCD_Display_Thread(void *arg) {
     // 맨 처음 시작할 때
     int len1 = 14, len2 = 11, CG_or_DD = 1;
