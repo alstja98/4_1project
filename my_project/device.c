@@ -41,6 +41,17 @@ void closeLED();
 
 int initFND(int fd);
 void closeFND();
+<<<<<<< HEAD
+=======
+
+//숫자야구용 fnd function -u
+void All_FND_toggle(void); //컴파일 확인
+void FND_BACK4_8();//컴파일 확인
+void FND_Shuffle();//컴파일 확인
+void FND_Show_Answere_win();//컴파일 확인
+void FND_Show_Answere_lose();//컴파일 확인
+
+>>>>>>> devu
 
 int initDOT(int fd);
 void closeDOT();
@@ -84,7 +95,6 @@ ushort FND_TABLE[16] = {
 	0x39, 0x5E, 0x79, 0x71
 };
 
-unsigned char count[8]={0,0,0,0,0,0,0,0};
 
 
 
@@ -129,7 +139,11 @@ ushort DOT_TABLE[43][5] = {
 	{0x7E, 0x7E, 0x7F, 0x7F, 0x7F },
 	{0x7E, 0x7F, 0x7F, 0x7F, 0x7F },
 	{0x7F, 0x7F, 0x7F, 0x7F, 0x7F },
+<<<<<<< HEAD
 	{0x7F, 0x49, 0x49, 0x49, 0x36}, // B
+=======
+    {0x7F, 0x49, 0x49, 0x49, 0x36}, // B
+>>>>>>> devu
     {0x3F, 0x44, 0x44, 0x44, 0x3F }, // A
     {0x32, 0x49, 0x49, 0x49, 0x62}, //S
     {0x7F, 0x49, 0x49, 0x49, 0x41}, //E
@@ -447,20 +461,7 @@ void closeFND()
 	printf("FND was closed.\n");
 }
 
-// added function -u 
-void AllFND_on()
-{
-	if(!isFNDInitialized) return;
 
-	*pFND[0] = 0x7F;
-	*pFND[1] = 0x7F;
-	*pFND[2] = 0x7F;
-	*pFND[3] = 0x7F;
-	*pFND[4] = 0x7F;
-	*pFND[5] = 0x7F;
-	*pFND[6] = 0x7F;
-	*pFND[7] = 0x7F;
-}
 void AllFND_Clear()
 {
 	if (!isFNDInitialized) return;
@@ -503,6 +504,7 @@ void All_FND_Blink(){
         	usleep(500000);
 	}
 }
+<<<<<<< HEAD
 
 void Back4_FND_On()
 {
@@ -514,6 +516,102 @@ void Back4_FND_On()
 	*pFND[3] = 0x7F;
 }
 
+=======
+// 숫자야구용 fnd function -u 
+
+void AllFND_on()
+{
+	if(!isFNDInitialized) return;
+
+	*pFND[0] = 0x7F;
+	*pFND[1] = 0x7F;
+	*pFND[2] = 0x7F;
+	*pFND[3] = 0x7F;
+	*pFND[4] = 0x7F;
+	*pFND[5] = 0x7F;
+	*pFND[6] = 0x7F;
+	*pFND[7] = 0x7F;
+}
+
+void All_FND_toggle(){
+
+while (1){
+        	AllFND_on();
+        	usleep(1000000);
+        	AllFND_Clear();        	
+        	usleep(1000000);
+	}		
+}
+
+
+
+void FND_BACK4_8()
+{
+    if (!isFNDInitialized) return;
+
+	int i ;
+	
+    for (i = 0; i < 4; i++) {
+
+        *pFND[i] = FND_TABLE[8];
+	}
+}
+
+
+void FND_shuffle()
+{
+		if (!isFNDInitialized) return;
+
+    int count ;
+    
+    for(count = 0;count<20;count++)
+    {
+        *pFND[0] = FND_TABLE[count%10];
+        *pFND[1] = FND_TABLE[count%10];
+        *pFND[2] = FND_TABLE[count%10];
+        *pFND[3] = FND_TABLE[count%10];
+        
+        usleep(500000); // 0.5초 딜레이
+		
+    }
+}
+
+void FND_Show_Answere_win()
+{
+	if (!isFNDInitialized) return;
+	
+	*pFND[0] = FND_TABLE[1/*answer[3]*/];
+	*pFND[1] = FND_TABLE[2/*answer[2]*/];
+	*pFND[2] = FND_TABLE[3/*answer[1]*/];
+	*pFND[3] = FND_TABLE[4/*answer[0]*/];
+
+	while(1){
+	*pFND[4] = FND_TABLE[1/*itput[3]*/];
+	*pFND[5] = FND_TABLE[2/*input[2]*/];
+	*pFND[6] = FND_TABLE[3/*input[1]*/];
+	*pFND[7] = FND_TABLE[4/*input[0]*/];
+	usleep(1000000)
+	}
+}
+
+void FND_Show_Answere_lose()
+{
+	if (!isFNDInitialized) return;
+	
+	*pFND[0] = FND_TABLE[1/*answer[3]*/];
+	*pFND[1] = FND_TABLE[2/*answer[2]*/];
+	*pFND[2] = FND_TABLE[3/*answer[1]*/];
+	*pFND[3] = FND_TABLE[4/*answer[0]*/];
+	
+	*pFND[4] = FND_TABLE[0];
+	*pFND[5] = FND_TABLE[0];
+	*pFND[6] = FND_TABLE[0];
+	*pFND[7] = FND_TABLE[0];
+	
+}
+
+
+>>>>>>> devu
 //
 // DOT functions
 //

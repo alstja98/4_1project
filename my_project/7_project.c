@@ -2,6 +2,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <string.h>
+#include <pthread.h>
 #include "device.h"
 #include <pthread.h>
 
@@ -48,7 +49,7 @@ void CLCD_Display_LastInning(int inning);
 
 
 int main() {
-    // devices initialization
+    // devices initialization 완료
     int result = initDevices(DEVICE_ALL);
 	if (result == FAIL_MEMORY_OPEN) {
 		perror("Could not open 'dev/mem'.");
