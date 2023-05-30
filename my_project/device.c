@@ -41,7 +41,6 @@ void closeLED();
 
 int initFND(int fd);
 void closeFND();
-<<<<<<< HEAD
 =======
 
 //숫자야구용 fnd function -u
@@ -51,7 +50,6 @@ void FND_Shuffle();//컴파일 확인
 void FND_Show_Answere_win();//컴파일 확인
 void FND_Show_Answere_lose();//컴파일 확인
 
->>>>>>> devu
 
 int initDOT(int fd);
 void closeDOT();
@@ -139,11 +137,7 @@ ushort DOT_TABLE[43][5] = {
 	{0x7E, 0x7E, 0x7F, 0x7F, 0x7F },
 	{0x7E, 0x7F, 0x7F, 0x7F, 0x7F },
 	{0x7F, 0x7F, 0x7F, 0x7F, 0x7F },
-<<<<<<< HEAD
-	{0x7F, 0x49, 0x49, 0x49, 0x36}, // B
-=======
     {0x7F, 0x49, 0x49, 0x49, 0x36}, // B
->>>>>>> devu
     {0x3F, 0x44, 0x44, 0x44, 0x3F }, // A
     {0x32, 0x49, 0x49, 0x49, 0x62}, //S
     {0x7F, 0x49, 0x49, 0x49, 0x41}, //E
@@ -284,7 +278,7 @@ char getch()
 //
 // LED functions
 //
-int initLED(int fd) // LED 초기화 함수
+int initLED(int fd)
 {
 	LED = (LEDPTR*)mmap(NULL, 2, PROT_WRITE, MAP_SHARED, fd, FPGA_LED);
 	if (LED == MAP_FAILED) {
@@ -296,7 +290,7 @@ int initLED(int fd) // LED 초기화 함수
 	return SUCCESS;
 }
 
-void closeLED() // LED 닫는 함수
+void closeLED()
 {
 	if (LED == 0) return;
 	munmap(LED, 2);
@@ -304,25 +298,25 @@ void closeLED() // LED 닫는 함수
 	printf("LED was closed.\n");
 }
 
-void AllLED_On() //모든 LED 켜는 함수
+void AllLED_On()
 {
 	if (LED == 0) return;
 	*((ushort*)LED) = 0x0000;
 }
 
-void AllLED_Off() //모든 LED 끄는 함수
+void AllLED_Off()
 {
 	if (LED == 0) return;
 	*((ushort*)LED) = 0x00FF;
 }
 
-void AllLED_Toggle() //모든 LED 반전하는 함수
+void AllLED_Toggle()
 {
 	if (LED == 0) return;
 	*((ushort*)LED) = 0x00FF & ~*((ushort*)LED);
 }
 
-void LEDOnFromTop(int count) //위에서부터 LED 켜는 함수
+void LEDOnFromTop(int count)
 {
 	ushort led = 1U;
 	while (count-- > 0)
@@ -492,7 +486,7 @@ void FND_DrawNumber(int index, int val) // 사용자가 입력한 숫자를 fnd�
 {
 	if (!isFNDInitialized) return;
 	FND_Clear(index);
-	FND_Set(index, val);
+		FND_Set(index, val);
 }
 
 // devu
@@ -611,7 +605,6 @@ void FND_Show_Answere_lose()
 }
 
 
->>>>>>> devu
 //
 // DOT functions
 //
