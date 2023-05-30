@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "device.h"
+#include <pthread.h>
 
 #define MAX_INNINGS 9
 #define MAX_DIGITS 4
@@ -15,7 +16,7 @@ int currentInning = 1; // 현재 이닝
 int displayedInning = 0;
 int strikes, balls; // 현재 이닝에서의 Strikes와 Balls 개수
 int lastInning[MAX_INNINGS][3]; // [이닝별] [입력4숫자,Strikes,Balls] 결과 저장하는 배열
-int numLives = 7; // 목숨 개수. 처음에 7개
+int numLives = 8; // 목숨 개수. 처음에 8개
 int hiddenCoinUsed = 0; // Flag to track if hidden coin has been used
 
 
@@ -32,10 +33,10 @@ void displayFNDNumbers(int *numbers);
 
 // thread functions
 void run_in_parallel(void *(*func1)(void *), void *(*func2)(void *), void *(*func3)(void *), void *(*func4)(void *), void *(*func5)(void *));
-void *ALLLED_Blink(void *arg);
-void *LEDOnFromBottomBasedOnLives(void *arg);
-void *All_FND_Blink(void *arg);
-void *Back4_FND_On(void *arg);
+void *ALLLED_Blink_Thread(void *arg);
+void *LEDOnFromBottomBasedOnLives_Thread(void *arg);
+void *All_FND_Blink_Thread(void *arg);
+void *Back4_FND_On_Thread(void *arg);
 void *DOT_Timer_Thread(void *arg);
 void *DOT_Baseball_Thread(void *arg);
 void *CLCD_Display_Thread(void *arg);
@@ -43,6 +44,7 @@ void *CLCD_Display_Thread_GL(void *arg);
 void *CLCD_Display_Thread_Denied(void *arg);
 void *CLCD_Display_Thread_Ingame(void *arg);
 void *CLCD_Display_Thread_FinishWin(void *arg);
+void CLCD_Display_LastInning(int inning);
 
 
 int main() {
@@ -61,13 +63,9 @@ int main() {
     
     initializeGame();
     // 아래는 테스트 해볼 함수들
-    // DOT_Display_Baseball();
-    // ALLLED_Blink();
     // AlternateLEDBlink();
     // TurnOffTopLED();
     // run_in_parallel(CLCD_Display_Thread_Ingame, NULL, NULL, NULL, NULL);
-    printf("initialize test finish");
-
 
     DOT_Clear();
 	closeDevices();
@@ -77,16 +75,28 @@ int main() {
 void initializeGame() { // 1단계
     srand(time(NULL)); // 시간을 기반으로 난수 생성기 초기화
     generateAnswer();
-    printf("Answer testing: %d%d%d%d\n", answer[0], answer[1], answer[2], answer[3]); // answer 잘 만들어지는지 테스트
+    printf("Game Start!\n");
 
-    run_in_parallel(DOT_Baseball_Thread, CLCD_Display_Thread, ALLLED_Blink, All_FND_Blink, NULL);
+    run_in_parallel(DOT_Baseball_Thread, CLCD_Display_Thread, ALLLED_Blink_Thread, All_FND_Blink_Thread, NULL);
     while (1) {
-        if (IsKeypadPressed(3, 2)) { // Enter (3,2)위치의 버튼을 누르면
+        if (IsKeypadPressed(2, 3)) { // keypad enter 버튼
+            printf("Let's baseball game :)\n");
             playGame();
             break;
         }
         usleep(1000); 
     }
+
+    // 1. answer 잘 만들어짐 확인 완료
+    // 2. DOT_Display_Baseball()이 잘 실행됨 확인 완료
+    // 3. CLCD_Display_Thread()가 잘 실행됨 확인 완료 (BULLS AND COWS )
+    // 4. ALL LED BLINK 확인 완료함. 근데 몇번 하다가 맘
+    // 5. ALL FND 도 잘 확인함.
+    // 6. keypad 완료.
+
+    // 문제 : run_in_parallel에서 넘어가지 않는다. 
+
+
     // touchpad의 enter를 누를 시에 playGame()으로 이동해야함 - 완료
     // led는 우선 모든 요소가 1초 간격으로 깜박이게 출력하게 - 완료
     // led는 1,3,5,7 번쨰와 2,4,6 번째 LED가 1초 간격으로 서로 번갈아가도록 출력 - 나중에 테스트
@@ -111,31 +121,36 @@ void generateAnswer() { // 잘 실행됨.
 void playGame() {
     while (currentInning <= MAX_INNINGS && numLives > 0) {
         int guess[MAX_DIGITS];
-        run_in_parallel(CLCD_Display_Thread_GL, DOT_Timer_Thread, Back4_FND_On, LEDOnFromBottomBasedOnLives, NULL);
+        printf("guess 통과\n");
+        run_in_parallel(CLCD_Display_Thread_GL, DOT_Timer_Thread, Back4_FND_On_Thread, LEDOnFromBottomBasedOnLives_Thread, NULL);
         // 이미 cpu가 생성한 answer가 있는 상태
-        // clcd는 good luck 출력 - 완료
-        // fnd는 뒤에 4개는 8888 출력하고, 앞에 4개는 출력 안함 - 완료
-        // led는 numLives 개수만큼 아래서부터 on - 완료
-        // dot는 타이머 실행 - 완료
+        // clcd는 good luck 출력 -> 변화가 안됨
+        // fnd는 뒤에 4개는 8888 출력하고, 앞에 4개는 출력 안함 -> 앞에 4개가 출력됨
+        // led는 numLives 개수만큼 아래서부터 on -> 괜찮음
+        // dot는 타이머 실행 -> B가 나오고 타이머는 안나옴.
+        printf("playGame 시작\n");
+        // getInput(guess);
+        // printf("getInput 통과\n");
+        // checkGuess(guess);
+        // printf("checkGuess 통과\n");
 
-        getInput(guess);
-        checkGuess(guess);
-
-        if (strikes == MAX_DIGITS) {
-            // 정답을 맞춘 경우. 게임 종료
-            run_in_parallel(NULL, CLCD_Display_Thread_FinishWin, ALLLED_Blink, NULL, NULL);
-            break;
-        } else {
-            // 그 다음 이닝으로 넘어간다.
-            // 이전의 strikes, balls 정보를 lastInning 배열에 저장한다.
-            // currentInning도 업데이트 한다.
-            // led 개수를 하나 감소한다.
-            // dot는 타이머로 돌아옴
-            run_in_parallel(NULL, CLCD_Display_Thread_Ingame, TurnOffTopLED, NULL, NULL);
-            // Additional code for new components
-            updateLastInning(currentInning, strikes, balls); // 이닝별 스트라이크, 볼 개수 저장
-            currentInning++;
-        }
+        // if (strikes == MAX_DIGITS) {
+        //     // 정답을 맞춘 경우. 게임 종료
+        //     run_in_parallel(NULL, CLCD_Display_Thread_FinishWin, ALLLED_Blink_Thread, NULL, NULL);
+        //     break;
+        // } else {
+        //     // 그 다음 이닝으로 넘어간다.
+        //     // 이전의 strikes, balls 정보를 lastInning 배열에 저장한다.
+        //     // currentInning도 업데이트 한다.
+        //     // led 개수를 하나 감소한다.
+        //     // dot는 타이머로 돌아옴
+        //     run_in_parallel(NULL, CLCD_Display_Thread_Ingame, NULL, NULL, NULL);
+        //     print("playGame run_in_parallel 통과\n");
+        //     TurnOffTopLED();
+        //     // Additional code for new components
+        //     updateLastInning(currentInning, strikes, balls); // 이닝별 스트라이크, 볼 개수 저장
+        //     currentInning++;
+        // }
     }
 
     if (currentInning > MAX_INNINGS || numLives == 0) { // 9회까지 진행했거나 목숨이 0개가 되었을 때
@@ -158,20 +173,22 @@ void getInput(int *input) {
     int value = 0;
     // 키패드에서 받은 값을 input 배열에 저장
     // 키패드에서 받은 값을 순서대로 FND 모듈에 출력
+
+
     while (index != 4) {
         if (IsKeypadPressed(0, 0)) {
             value = 7;
-            $input[index] = value;
+            input[index] = value;
             FND_DrawNumber(index, value);
             index++;
         }else if (IsKeypadPressed(0, 1)) {
             value = 8;
-            $input[index] = value;
+            input[index] = value;
             FND_DrawNumber(index, value);
             index++;
         }else if (IsKeypadPressed(0, 2)) {
             value = 9;
-            $input[index] = value;
+            input[index] = value;
             FND_DrawNumber(index, value);
             index++;
         }else if (IsKeypadPressed(0, 3)){
@@ -195,17 +212,17 @@ void getInput(int *input) {
             }
         }else if (IsKeypadPressed(1, 0)) {
             value = 4;
-            $input[index] = value;
+            input[index] = value;
             FND_DrawNumber(index, value);
             index++;
         }else if (IsKeypadPressed(1, 1)) {
             value = 5;
-            $input[index] = value;
+            input[index] = value;
             FND_DrawNumber(index, value);
             index++;
         }else if (IsKeypadPressed(1, 2)) {
             value = 6;
-            $input[index] = value;
+            input[index] = value;
             FND_DrawNumber(index, value);
             index++;
         }else if (IsKeypadPressed(1, 3)){
@@ -231,17 +248,17 @@ void getInput(int *input) {
             }
         }else if (IsKeypadPressed(2, 0)) {
             value = 1;
-            $input[index] = value;
+            input[index] = value;
             FND_DrawNumber(index, value);
             index++;
         }else if (IsKeypadPressed(2, 1)) {
             value = 2;
-            $input[index] = value;
+            input[index] = value;
             FND_DrawNumber(index, value);
             index++;
         }else if (IsKeypadPressed(2, 2)) {
             value = 3;
-            $input[index] = value;
+            input[index] = value;
             FND_DrawNumber(index, value);
             index++;
         }else if (IsKeypadPressed(2, 3)){
@@ -263,7 +280,7 @@ void getInput(int *input) {
             }
         }else if (IsKeypadPressed(3, 0)) {
             value = 0;
-            $input[index] = value;
+            input[index] = value;
             FND_DrawNumber(index, value);
             index++;
         }else if (IsKeypadPressed(3, 1)){
@@ -271,17 +288,17 @@ void getInput(int *input) {
             // index도 하나 감소
             index--;
             FND_Clear(index);
-        }else if (IsKeyPressed(3, 2)){
+        }else if (IsKeypadPressed(3, 2)){
             // enter
             continue;
-        }else if (IsKeyPressed(3, 3)){
+        }else if (IsKeypadPressed(3, 3)){
             // 목숨 하나 추가
             continue;
         }
 
         usleep(1000); 
     }
-    int number = &input[0]*1000 + &input[1]*100 + &input[2]*10 + &input[3];
+    int number = input[0]*1000 + input[1]*100 + input[2]*10 + input[3];
     lastInning[currentInning-1][0] = number;
 }
 
@@ -317,67 +334,77 @@ void updateLastInning(int inning, int strikes, int balls) {
 void run_in_parallel(void *(*func1)(void *), void *(*func2)(void *), void *(*func3)(void *), void *(*func4)(void *), void *(*func5)(void *)) {
     pthread_t tid1, tid2, tid3, tid4, tid5;
 
-    int t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
-
-    if (func1 && pthread_create(&tid1, NULL, func1, NULL) == 0) {
-        t1 = 1;
-    }
-
-    if (func2 && pthread_create(&tid2, NULL, func2, NULL) == 0) {
-        t2 = 1;
-    }
-
-    if (func3 && pthread_create(&tid3, NULL, func3, NULL) == 0) {
-        t3 = 1;
-    }
-
-    if (func4 && pthread_create(&tid4, NULL, func4, NULL) == 0) {
-        t4 = 1;
-    }
-
-    if (func5 && pthread_create(&tid5, NULL, func5, NULL) == 0) {
-        t5 = 1;
-    }
-
-    if (t1) {
-        pthread_join(tid1, NULL);
-    }
-
-    if (t2) {
-        pthread_join(tid2, NULL);
-    }
-
-    if (t3) {
-        pthread_join(tid3, NULL);
-    }
-
-    if (t4) {
-        pthread_join(tid4, NULL);
-    }
-
-    if (t5) {
-        pthread_join(tid5, NULL);
-    }
+    if (func1) pthread_create(&tid1, NULL, func1, NULL);
+    if (func2) pthread_create(&tid2, NULL, func2, NULL);
+    if (func3) pthread_create(&tid3, NULL, func3, NULL);
+    if (func4) pthread_create(&tid4, NULL, func4, NULL);
+    if (func5) pthread_create(&tid5, NULL, func5, NULL);
 }
 
+// void run_in_parallel(void *(*func1)(void *), void *(*func2)(void *), void *(*func3)(void *), void *(*func4)(void *), void *(*func5)(void *)) {
+//     pthread_t tid1, tid2, tid3, tid4, tid5;
+
+//     int t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
+
+//     if (func1 && pthread_create(&tid1, NULL, func1, NULL) == 0) {
+//         t1 = 1;
+//     }
+
+//     if (func2 && pthread_create(&tid2, NULL, func2, NULL) == 0) {
+//         t2 = 1;
+//     }
+
+//     if (func3 && pthread_create(&tid3, NULL, func3, NULL) == 0) {
+//         t3 = 1;
+//     }
+
+//     if (func4 && pthread_create(&tid4, NULL, func4, NULL) == 0) {
+//         t4 = 1;
+//     }
+
+//     if (func5 && pthread_create(&tid5, NULL, func5, NULL) == 0) {
+//         t5 = 1;
+//     }
+
+//     if (t1) {
+//         pthread_join(tid1, NULL);
+//     }
+
+//     if (t2) {
+//         pthread_join(tid2, NULL);
+//     }
+
+//     if (t3) {
+//         pthread_join(tid3, NULL);
+//     }
+
+//     if (t4) {
+//         pthread_join(tid4, NULL);
+//     }
+
+//     if (t5) {
+//         pthread_join(tid5, NULL);
+//     }
+// }
+
 // led threads
-void *ALLLED_Blink(void *arg) {
+void *ALLLED_Blink_Thread(void *arg) {
     ALLLED_Blink();
     return NULL;
 }
 
-void *LEDOnFromBottomBasedOnLives(void *arg) {
+void *LEDOnFromBottomBasedOnLives_Thread(void *arg) {
     LEDOnFromBottomBasedOnLives(numLives);
     return NULL;
 }
 
 // fnd threads
-void *All_FND_Blink(void *arg) {
+void *All_FND_Blink_Thread(void *arg) {
     All_FND_Blink();
     return NULL;
 }
 
-void *Back4_FND_On(void *arg) {
+void *Back4_FND_On_Thread(void *arg) {
     Back4_FND_On();
     return NULL;
 }
@@ -407,14 +434,14 @@ void *CLCD_Display_Thread(void *arg) {
 }
 void *CLCD_Display_Thread_GL(void *arg) {
     // 맨 처음 시작할 때
-    char buf1[100]="Good Luck!", buf2[100]="Enter your guess (4 digits):";
-    int len1=strlen(buf1), len2=strlen(buf2), CG_or_DD = 1;
+    int len1 = 10, len2=14 , CG_or_DD = 1;
+    char buf1[100]="Good Luck!", buf2[100]="Press 4 digits";s
     CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
     return NULL;
 }
 void *CLCD_Display_Thread_Denied(void *arg) {
     // 맨 처음 시작할 때
-    char buf1[100]="Denied Last Inning mode", buf2[100]="You should enter 4 digits";
+    char buf1[100]="Denied!", buf2[100]="Keep Pressed";
     int len1=strlen(buf1), len2=strlen(buf2), CG_or_DD = 1;
     CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
     return NULL;

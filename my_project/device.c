@@ -129,14 +129,14 @@ ushort DOT_TABLE[43][5] = {
 	{0x7E, 0x7E, 0x7F, 0x7F, 0x7F },
 	{0x7E, 0x7F, 0x7F, 0x7F, 0x7F },
 	{0x7F, 0x7F, 0x7F, 0x7F, 0x7F },
-    {0x7F, 0x89, 0x89, 0x89, 0x26 }, // B
-    {0x7E, 0x09, 0x09, 0x09, 0x7E }, // A
-    {0x4F, 0x49, 0x49, 0x49, 0x79 }, // S
-    {0x7F, 0x49, 0x49, 0x49, 0x49 }, // E
-    {0x7F, 0x89, 0x89, 0x89, 0x26 }, // B
-    {0x7E, 0x09, 0x09, 0x09, 0x7E }, // A
-    {0x7F, 0x40, 0x40, 0x40, 0x40 }, // L
-    {0x7F, 0x40, 0x40, 0x40, 0x40 }, // L
+	{0x7F, 0x49, 0x49, 0x49, 0x36}, // B
+    {0x3F, 0x44, 0x44, 0x44, 0x3F }, // A
+    {0x32, 0x49, 0x49, 0x49, 0x62}, //S
+    {0x7F, 0x49, 0x49, 0x49, 0x41}, //E
+    {0x7F, 0x49, 0x49, 0x49, 0x36 }, // B
+    {0x3F, 0x44, 0x44, 0x44, 0x3F }, // A
+    {0x7F, 0x01, 0x01, 0x01, 0x01 },  // L
+    {0x7F, 0x01, 0x01, 0x01, 0x01 },  // L
 };
 
 // CLCD variables
@@ -322,7 +322,7 @@ void TurnOffTopLED() //가장 위에 켜져 있는 LED 하나를 끄는 함수
     if (LED == 0) return;
 
     ushort led_status = *((ushort*)LED);
-    ushort led_mask = 1U << (LED_COUNT - 1); // LED_COUNT는 LED 개수를 의미함. 이 경우 8이라 가정.
+    ushort led_mask = 1U << (7); // LED_COUNT는 LED 개수를 의미함. 이 경우 8이라 가정.
 
     // 가장 위에 있는 켜져 있는 LED를 찾기 위해 비트마스크를 오른쪽으로 시프트함.
     while (led_mask > 0) {
@@ -349,8 +349,8 @@ void LEDOnFromBottom(int count) //아래에서부터 LED 켜는 함수
 
 void ALLLED_Blink(){
 	if (LED == 0) return;
-
-    for (int i = 0; i < 10; ++i) {
+	
+    while(1){
         AllLED_On();
         usleep(500000); // 0.5초 동안 대기합니다.
         AllLED_Off();
@@ -360,8 +360,8 @@ void ALLLED_Blink(){
 
 void AlternateLEDBlink() { //1,3,5,7 번째와 2,4,6번쨰 LED 번갈아 출력
 	if (LED == 0) return;
-
-	for (int i = 0; i < 10; ++i) {
+	int i;
+	for (i = 0; i < 10; ++i) {
 			// 1, 3, 5, 7 번째 LED 켜기
 			LED->LED0 = 1;
 			LED->LED2 = 1;
@@ -388,9 +388,9 @@ void AlternateLEDBlink() { //1,3,5,7 번째와 2,4,6번쨰 LED 번갈아 출력
 
 void LEDOnFromBottomBasedOnLives(int numLives) { // numLives에 따라 아래에서부터 LED 켜는 함수
 	if (LED == 0 || numLives < 0 || numLives > 8) return;
-
+	int i;
 	ushort led = 0x0080U; // 첫번째 LED 위치
-	for (int i = 0; i < numLives; i++)
+	for (i = 0; i < numLives; i++)
 	{
 		*((ushort*)LED) = 0x00FF & ~led;
 		led = (led >> 1) | 0x0080;
@@ -479,7 +479,7 @@ void FND_Clear(int index)
 {
 	if (!isFNDInitialized || (index < 0) || (index > 7)) return;
 	*pFND[index] = 0x00;
-}*/
+}
 
 void FND_Set(int index, int no)
 {
@@ -496,20 +496,22 @@ void FND_DrawNumber(int index, int val) // 사용자가 입력한 숫자를 fnd�
 
 // devu
 void All_FND_Blink(){
-        	AllFND_on()
+	while(1){
+        	AllFND_on();
         	usleep(500000);
         	AllFND_Clear();
         	usleep(500000);
+	}
 }
 
 void Back4_FND_On()
 {
 	if(!isFNDInitialized) return;
 	AllFND_Clear();
-	*pFND[4] = 0x7F;
-	*pFND[5] = 0x7F;
-	*pFND[6] = 0x7F;
-	*pFND[7] = 0x7F;
+	*pFND[0] = 0x7F;
+	*pFND[1] = 0x7F;
+	*pFND[2] = 0x7F;
+	*pFND[3] = 0x7F;
 }
 
 //
@@ -584,6 +586,7 @@ void DOT_Write_Decimal(int no)
 // 숫자야구 dot matrix 짠거
 void DOT_ALL(){
 	//DOT 모두 켜짐
+	DOT_Clear();
 	DOT_Write(DOT_TABLE[36]);
 }
 
@@ -598,7 +601,8 @@ void DOT_Timer(){
 
 void DOT_Display_Baseball() {
 	DOT_Clear();
-    for(int i = 37; i <= 45; i++){
+	int i;
+    for(i = 37; i <= 45; i++){
         DOT_Write(DOT_TABLE[i]);
         usleep(500000); // 0.5초마다 표시
     }
