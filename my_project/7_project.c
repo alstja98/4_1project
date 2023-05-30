@@ -129,28 +129,28 @@ void playGame() {
         // led는 numLives 개수만큼 아래서부터 on -> 괜찮음
         // dot는 타이머 실행 -> B가 나오고 타이머는 안나옴.
         printf("playGame 시작\n");
-        // getInput(guess);
-        // printf("getInput 통과\n");
-        // checkGuess(guess);
-        // printf("checkGuess 통과\n");
+        getInput(guess);
+        printf("getInput 통과\n");
+        checkGuess(guess);
+        printf("checkGuess 통과\n");
 
-        // if (strikes == MAX_DIGITS) {
-        //     // 정답을 맞춘 경우. 게임 종료
-        //     run_in_parallel(NULL, CLCD_Display_Thread_FinishWin, ALLLED_Blink_Thread, NULL, NULL);
-        //     break;
-        // } else {
-        //     // 그 다음 이닝으로 넘어간다.
-        //     // 이전의 strikes, balls 정보를 lastInning 배열에 저장한다.
-        //     // currentInning도 업데이트 한다.
-        //     // led 개수를 하나 감소한다.
-        //     // dot는 타이머로 돌아옴
-        //     run_in_parallel(NULL, CLCD_Display_Thread_Ingame, NULL, NULL, NULL);
-        //     print("playGame run_in_parallel 통과\n");
-        //     TurnOffTopLED();
-        //     // Additional code for new components
-        //     updateLastInning(currentInning, strikes, balls); // 이닝별 스트라이크, 볼 개수 저장
-        //     currentInning++;
-        // }
+        if (strikes == MAX_DIGITS) {
+            // 정답을 맞춘 경우. 게임 종료
+            run_in_parallel(NULL, CLCD_Display_Thread_FinishWin, ALLLED_Blink_Thread, NULL, NULL);
+            break;
+        } else {
+            // 그 다음 이닝으로 넘어간다.
+            // 이전의 strikes, balls 정보를 lastInning 배열에 저장한다.
+            // currentInning도 업데이트 한다.
+            // led 개수를 하나 감소한다.
+            // dot는 타이머로 돌아옴
+            run_in_parallel(NULL, CLCD_Display_Thread_Ingame, NULL, NULL, NULL);
+            printf("playGame run_in_parallel 통과\n");
+            TurnOffTopLED();
+            // Additional code for new components
+            updateLastInning(currentInning, strikes, balls); // 이닝별 스트라이크, 볼 개수 저장
+            currentInning++;
+        }
     }
 
     if (currentInning > MAX_INNINGS || numLives == 0) { // 9회까지 진행했거나 목숨이 0개가 되었을 때
@@ -341,51 +341,6 @@ void run_in_parallel(void *(*func1)(void *), void *(*func2)(void *), void *(*fun
     if (func5) pthread_create(&tid5, NULL, func5, NULL);
 }
 
-// void run_in_parallel(void *(*func1)(void *), void *(*func2)(void *), void *(*func3)(void *), void *(*func4)(void *), void *(*func5)(void *)) {
-//     pthread_t tid1, tid2, tid3, tid4, tid5;
-
-//     int t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
-
-//     if (func1 && pthread_create(&tid1, NULL, func1, NULL) == 0) {
-//         t1 = 1;
-//     }
-
-//     if (func2 && pthread_create(&tid2, NULL, func2, NULL) == 0) {
-//         t2 = 1;
-//     }
-
-//     if (func3 && pthread_create(&tid3, NULL, func3, NULL) == 0) {
-//         t3 = 1;
-//     }
-
-//     if (func4 && pthread_create(&tid4, NULL, func4, NULL) == 0) {
-//         t4 = 1;
-//     }
-
-//     if (func5 && pthread_create(&tid5, NULL, func5, NULL) == 0) {
-//         t5 = 1;
-//     }
-
-//     if (t1) {
-//         pthread_join(tid1, NULL);
-//     }
-
-//     if (t2) {
-//         pthread_join(tid2, NULL);
-//     }
-
-//     if (t3) {
-//         pthread_join(tid3, NULL);
-//     }
-
-//     if (t4) {
-//         pthread_join(tid4, NULL);
-//     }
-
-//     if (t5) {
-//         pthread_join(tid5, NULL);
-//     }
-// }
 
 // led threads
 void *ALLLED_Blink_Thread(void *arg) {
@@ -433,9 +388,8 @@ void *CLCD_Display_Thread(void *arg) {
     return NULL;
 }
 void *CLCD_Display_Thread_GL(void *arg) {
-    // 맨 처음 시작할 때
-    int len1 = 10, len2=14 , CG_or_DD = 1;
-    char buf1[100]="Good Luck!", buf2[100]="Press 4 digits";s
+    int len1 = 10, len2 = 14 , CG_or_DD = 1;
+    char buf1[100]="Good Luck!", buf2[100]="Press 4 digits";
     CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
     return NULL;
 }

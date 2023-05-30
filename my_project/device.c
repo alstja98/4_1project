@@ -506,7 +506,7 @@ void All_FND_Blink(){
 
 void Back4_FND_On()
 {
-	if(!isFNDInitialized) return;
+	// if(!isFNDInitialized) return;
 	AllFND_Clear();
 	*pFND[0] = 0x7F;
 	*pFND[1] = 0x7F;
@@ -591,18 +591,19 @@ void DOT_ALL(){
 }
 
 void DOT_Timer(){
-	DOT_Clear();
     int i;
-    for(i=36; i>=0; i--){
+	DOT_Clear();
+    for(i=35; i>=0; i--){
         DOT_Write(DOT_TABLE[i]);
         usleep(1000000); //1초마다 타이머
     }
 }
 
+
 void DOT_Display_Baseball() {
 	DOT_Clear();
 	int i;
-    for(i = 37; i <= 45; i++){
+    for(i = 36; i <= 43; i++){
         DOT_Write(DOT_TABLE[i]);
         usleep(500000); // 0.5초마다 표시
     }
@@ -885,7 +886,7 @@ void CLCD_Display_Custom(int len1, int len2, int CG_or_DD, char *buf1, char *buf
         CLCD_WRITE(buf2[i]);
     }
 
-    closeCLCD();
+    // closeCLCD();
 }
 
 
