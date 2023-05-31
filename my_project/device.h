@@ -120,7 +120,6 @@ extern char			getch();
 // LED functions
 extern LEDPTR*		LED;
 extern void			LEDOnFromTop(int count);
-extern void			LEDOnFromBottom(int count);
 extern void			AllLED_On();
 extern void			AllLED_Off();
 extern void			AllLED_Toggle();

@@ -343,15 +343,6 @@ void TurnOffTopLED() //가장 위에 켜져 있는 LED 하나를 끄는 함수
     *((ushort*)LED) = led_status;
 }
 
-void LEDOnFromBottom(int count) //아래에서부터 LED 켜는 함수
-{
-	ushort led = 0x0080U;
-	while (count-- > 0)
-	{
-		*((ushort*)LED) = 0x00FF & ~led;
-		led = (led >> 1) | 0x0080;
-	}
-}
 
 void ALLLED_Blink(){
 	if (LED == 0) return;

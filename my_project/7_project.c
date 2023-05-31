@@ -146,7 +146,6 @@ void playGame() {
             // dot는 타이머로 돌아옴
             run_in_parallel(NULL, CLCD_Display_Thread_Ingame, NULL, NULL, NULL);
             TurnOffTopLED();
-            // Additional code for new components
             updateLastInning(currentInning, strikes, balls, guess); // 이닝별 스트라이크, 볼 개수 저장
             currentInning++;
             numLives--;
@@ -165,7 +164,6 @@ void playGame() {
 }
 
 // 키패드로 숫자를 입력하고, 입력한 숫자를 배열에 저장하는 함수
-// getInput을 하는동안은, lastInning 모드를 진행할 수 없다.
 void getInput(int *input) {
     int index = 0;
     int value = 0;
@@ -193,14 +191,15 @@ void getInput(int *input) {
         }else if (key == 4096){
             if(index == 0){
                 // 숫자를 입력한 적이 없는 경우만 가능함
-                // 무조건 첫번째 이닝의 기록부터 보이게
+                // current - 1 이닝의 결과를 보여줘야함
+                // 이닝이 1인 경우에는 이전 이닝이 없으므로, denied 출력
                 if(currentInning == 1){
                     CLCD_Clear();
                     char buf1[100]="Denied!", buf2[100]="Keep Pressed!";
                     int len1=strlen(buf1), len2=strlen(buf2), CG_or_DD = 1;
                     CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
                 }else{
-                    displayedInning = currentInning;
+                    displayedInning = currentInning - 1 ;
                     CLCD_Display_LastInning(displayedInning);
                 }
             }else{
@@ -235,7 +234,7 @@ void getInput(int *input) {
                 // 보여주는건 tempInning 을 보여줌
                 if(displayedInning == 0 || displayedInning == 1){
                     CLCD_Clear();
-                    char buf1[100]="Denied!", buf2[100]="Keep Pressed!";
+                    char buf1[100]="Denied!", buf2[100]="No more before";
                     int len1=strlen(buf1), len2=strlen(buf2), CG_or_DD = 1;
                     CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
                 }else{
@@ -268,9 +267,9 @@ void getInput(int *input) {
             index++;
         }else if (key == 16384){
             if(index==0){
-                 if(displayedInning == 0 || displayedInning >= currentInning){
-                     CLCD_Clear();
-                    char buf1[100]="Denied!", buf2[100]="Keep Pressed!";
+                 if(displayedInning == 0 || displayedInning >= currentInning-1){
+                    CLCD_Clear();
+                    char buf1[100]="Denied!", buf2[100]="No more after";
                     int len1=strlen(buf1), len2=strlen(buf2), CG_or_DD = 1;
                     CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
                  }else{
@@ -292,8 +291,15 @@ void getInput(int *input) {
         }else if (key == 128) { //DEL
             // 다른 숫자 눌러서 index가 늘어난상태니 하나 감소시키고
             // 가장 최근에 입력된 fnd 숫자 지움
-            index--;
-            FND_Clear(7-index);
+            if(index == 0){
+                CLCD_Clear();
+                char buf1[100]="Denied!", buf2[100]="Press Number!";
+                int len1=strlen(buf1), len2=strlen(buf2), CG_or_DD = 1;
+                CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
+            }else{
+                index--;
+                FND_Clear(7-index);
+            }
         }else if (key == 2048){
             // enter
             printf("You pressed enter.\n press keypad number 0-9\n");
@@ -301,6 +307,26 @@ void getInput(int *input) {
             continue;
         }else if (key == 32768){
             // 목숨 하나 추가
+            // led 1개 on
+            // 목숨은 3개 까지 추가 가능
+            if(hiddenCoinUsed == 3){
+                CLCD_Clear();
+                char buf1[100]="Denied!", buf2[100]="No more Coin";
+                int len1=strlen(buf1), len2=strlen(buf2), CG_or_DD = 1;
+                CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
+            }else{
+                char buf1[100] = "Hidden Coin Used!";
+                char buf2[100];
+                snprintf(buf2, sizeof(buf2), "%dCoin left", 2-hiddenCoinUsed);
+                int len1 = strlen(buf1), len2 = strlen(buf2);
+                int CG_or_DD = 1;
+                CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
+                hiddenCoinUsed++;
+                numLives++;
+                LEDOnFromBottomBasedOnLives(numLives);
+                printf("you earn one more life\n now you have %d lives\n", numLives);
+            }
+            usleep(500000);
             continue;
         }
 
@@ -429,7 +455,7 @@ void *CLCD_Display_Thread_FinishWin(void *arg) {
 void CLCD_Display_LastInning(int inning) {
     char buf1[100], buf2[100];
     snprintf(buf1, sizeof(buf1), "%dth inning", inning);
-    snprintf(buf2, sizeof(buf2), "digits: %d, %dS %dB", lastInning[inning][0], lastInning[inning][1], lastInning[inning][2]);
+    snprintf(buf2, sizeof(buf2), "%d NUM, %dS %dB", lastInning[inning-1][0], lastInning[inning-1][1], lastInning[inning-1][2]);
     int len1 = strlen(buf1), len2 = strlen(buf2);
     int CG_or_DD = 1;
     CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
