@@ -6,7 +6,7 @@
 #include "device.h"
 #include <pthread.h>
 
-#define MAX_INNINGS 9
+#define MAX_INNINGS 11
 #define MAX_DIGITS 4
 #define LED_ADDRESS(i) (FPGA_LED + i)
 
@@ -37,12 +37,11 @@ void *ALLLED_Blink_Thread(void *arg);
 void *LEDOnFromBottomBasedOnLives_Thread(void *arg);
 void *All_FND_Blink_Thread(void *arg);
 void *Back4_FND_On_Thread(void *arg);
-void *DOT_Timer_Thread(void *arg);
 void *DOT_Baseball_Thread(void *arg);
 void *CLCD_Display_Thread(void *arg);
 void *CLCD_Display_Thread_GL(void *arg);
 void *CLCD_Display_Thread_Denied(void *arg);
-void *CLCD_Display_Thread_Ingame(void *arg);
+void CLCD_Display_Ingame(int inning);
 void *CLCD_Display_Thread_FinishWin(void *arg);
 void CLCD_Display_LastInning(int inning);
 
@@ -61,11 +60,6 @@ int main() {
 		return -1;
 	}
     initializeGame();
-
-    // 아래는 테스트 해볼 함수들
-    // AlternateLEDBlink();
-    // TurnOffTopLED();
-    // run_in_parallel(CLCD_Display_Thread_Ingame, NULL, NULL, NULL, NULL);
 
     DOT_Clear();
 	closeDevices();
@@ -122,13 +116,16 @@ void generateAnswer() {
 void playGame() {
     while (currentInning <= MAX_INNINGS && numLives > 0) {
         int guess[MAX_DIGITS];
-        printf("guess 통과\n");
-        run_in_parallel(CLCD_Display_Thread_GL, DOT_Timer_Thread, Back4_FND_On_Thread, LEDOnFromBottomBasedOnLives_Thread, NULL);
+        if(currentInning == 1){
+            run_in_parallel(CLCD_Display_Thread_GL, NULL, Back4_FND_On_Thread, LEDOnFromBottomBasedOnLives_Thread, NULL);
+        }else{
+            run_in_parallel(NULL, NULL, Back4_FND_On_Thread, LEDOnFromBottomBasedOnLives_Thread, NULL);
+        }
+        DOT_Inning(currentInning);
         // 이미 cpu가 생성한 answer가 있는 상태
         // clcd는 good luck 출력 -> 변화가 안됨
         // fnd는 뒤에 4개는 8888 출력하고, 앞에 4개는 출력 안함 -> 앞에 4개가 출력됨
         // led는 numLives 개수만큼 아래서부터 on -> 괜찮음
-        // dot는 타이머 실행 -> B가 나오고 타이머는 안나옴.
         getInput(guess);
         checkGuess(guess);
 
@@ -144,9 +141,9 @@ void playGame() {
             // currentInning도 업데이트 한다.
             // led 개수를 하나 감소한다.
             // dot는 타이머로 돌아옴
-            run_in_parallel(NULL, CLCD_Display_Thread_Ingame, NULL, NULL, NULL);
-            TurnOffTopLED();
             updateLastInning(currentInning, strikes, balls, guess); // 이닝별 스트라이크, 볼 개수 저장
+            CLCD_Display_Ingame(currentInning);
+            TurnOffTopLED();
             currentInning++;
             numLives--;
             printf("lives left: %d\n", numLives);
@@ -159,6 +156,7 @@ void playGame() {
         int len1 = strlen(buf1), len2 = strlen(buf2);
         int CG_or_DD = 1;
         CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
+        FND_Show_Answer_lose(answer);
         printf("Game Over!\n");
     }
 }
@@ -400,14 +398,6 @@ void *Back4_FND_On_Thread(void *arg) {
 }
 
 // dot threads
-void *DOT_ALL_Thread(void *arg){
-    DOT_ALL();
-    return NULL;
-}
-void *DOT_Timer_Thread(void *arg) {
-    DOT_Timer();
-    return NULL;
-}
 
 void *DOT_Baseball_Thread(void *arg) {
     DOT_Display_Baseball();
@@ -435,10 +425,10 @@ void *CLCD_Display_Thread_Denied(void *arg) {
     CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
     return NULL;
 }
-void *CLCD_Display_Thread_Ingame(void *arg) {
+void CLCD_Display_Ingame(int inning) {
     char buf1[100], buf2[100];
-    snprintf(buf1, sizeof(buf1), "%dth inning", currentInning);
-    snprintf(buf2, sizeof(buf2), "%dS %dB", strikes, balls);
+    snprintf(buf1, sizeof(buf1), "Number: %04d", lastInning[inning-1][0]); 
+    snprintf(buf2, sizeof(buf2), "Strike:%d Ball:%d", strikes, balls);
     int len1 = strlen(buf1), len2 = strlen(buf2);
     int CG_or_DD = 1;
     CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
@@ -455,7 +445,7 @@ void *CLCD_Display_Thread_FinishWin(void *arg) {
 void CLCD_Display_LastInning(int inning) {
     char buf1[100], buf2[100];
     snprintf(buf1, sizeof(buf1), "%dth inning", inning);
-    snprintf(buf2, sizeof(buf2), "%d NUM, %dS %dB", lastInning[inning-1][0], lastInning[inning-1][1], lastInning[inning-1][2]);
+    snprintf(buf2, sizeof(buf2), "%04d NUM, %dS %dB", lastInning[inning-1][0], lastInning[inning-1][1], lastInning[inning-1][2]);
     int len1 = strlen(buf1), len2 = strlen(buf2);
     int CG_or_DD = 1;
     CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);

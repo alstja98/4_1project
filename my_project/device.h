@@ -135,6 +135,8 @@ extern void 		All_FND_Blink();
 extern void			FND_Clear(int index);
 extern void			FND_Set(int index, int no);
 extern void			FND_DrawNumber(int index, int val);
+extern void 		FND_Show_Answer_win(int *answer, int *input);
+extern void 		FND_Show_Answer_lose(int *answer);
 
 // DOT-Matrix functions
 extern void			DOT_Clear();
