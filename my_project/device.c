@@ -41,13 +41,11 @@ void closeLED();
 
 int initFND(int fd);
 void closeFND();
-=======
 
 //숫자야구용 fnd function -u
-void All_FND_toggle(void); //컴파일 확인
 void FND_BACK4_8();//컴파일 확인
 void FND_Shuffle();//컴파일 확인
-void FND_Show_Answere_win();//컴파일 확인
+void FND_Show_Answer_win(int *answer, int *input);
 void FND_Show_Answere_lose();//컴파일 확인
 
 
@@ -137,14 +135,14 @@ ushort DOT_TABLE[43][5] = {
 	{0x7E, 0x7E, 0x7F, 0x7F, 0x7F },
 	{0x7E, 0x7F, 0x7F, 0x7F, 0x7F },
 	{0x7F, 0x7F, 0x7F, 0x7F, 0x7F },
-    {0x7F, 0x49, 0x49, 0x49, 0x36}, // B
+    {0x7F, 0x49, 0x49, 0x49, 0x36 }, // B
     {0x3F, 0x44, 0x44, 0x44, 0x3F }, // A
-    {0x32, 0x49, 0x49, 0x49, 0x62}, //S
-    {0x7F, 0x49, 0x49, 0x49, 0x41}, //E
+    {0x32, 0x49, 0x49, 0x49, 0x62 }, //S
+    {0x7F, 0x49, 0x49, 0x49, 0x41 }, //E
     {0x7F, 0x49, 0x49, 0x49, 0x36 }, // B
     {0x3F, 0x44, 0x44, 0x44, 0x3F }, // A
     {0x7F, 0x01, 0x01, 0x01, 0x01 },  // L
-    {0x7F, 0x01, 0x01, 0x01, 0x01 },  // L
+    {0x7F, 0x01, 0x01, 0x01, 0x01 }  // L
 };
 
 // CLCD variables
@@ -330,7 +328,7 @@ void TurnOffTopLED() //가장 위에 켜져 있는 LED 하나를 끄는 함수
     if (LED == 0) return;
 
     ushort led_status = *((ushort*)LED);
-    ushort led_mask = 1U << (7); // LED_COUNT는 LED 개수를 의미함. 이 경우 8이라 가정.
+    ushort led_mask = 1U ; // LED_COUNT는 LED 개수를 의미함. 이 경우 8이라 가정.
 
     // 가장 위에 있는 켜져 있는 LED를 찾기 위해 비트마스크를 오른쪽으로 시프트함.
     while (led_mask > 0) {
@@ -338,7 +336,7 @@ void TurnOffTopLED() //가장 위에 켜져 있는 LED 하나를 끄는 함수
             led_status |= led_mask; // 해당 LED를 끔.
             break;
         }
-        led_mask >>= 1; // 다음 LED로 이동.
+        led_mask <<= 1; // 다음 LED로 이동.
     }
 
     // LED 상태 업데이트.
@@ -358,7 +356,8 @@ void LEDOnFromBottom(int count) //아래에서부터 LED 켜는 함수
 void ALLLED_Blink(){
 	if (LED == 0) return;
 	
-    while(1){
+	int i;
+	for(i=0; i<5; i++){
         AllLED_On();
         usleep(500000); // 0.5초 동안 대기합니다.
         AllLED_Off();
@@ -486,23 +485,24 @@ void FND_DrawNumber(int index, int val) // 사용자가 입력한 숫자를 fnd�
 {
 	if (!isFNDInitialized) return;
 	FND_Clear(index);
-		FND_Set(index, val);
+	FND_Set(7-index, val);
 }
 
 // devu
 void All_FND_Blink(){
-	while(1){
+	if(!isFNDInitialized) return;
+	int i;
+	for(i=0; i<5; i++){
         	AllFND_on();
         	usleep(500000);
         	AllFND_Clear();
         	usleep(500000);
 	}
 }
-<<<<<<< HEAD
 
 void Back4_FND_On()
 {
-	// if(!isFNDInitialized) return;
+	if(!isFNDInitialized) return;
 	AllFND_Clear();
 	*pFND[0] = 0x7F;
 	*pFND[1] = 0x7F;
@@ -510,13 +510,11 @@ void Back4_FND_On()
 	*pFND[3] = 0x7F;
 }
 
-=======
 // 숫자야구용 fnd function -u 
-
 void AllFND_on()
 {
 	if(!isFNDInitialized) return;
-
+	AllFND_Clear();
 	*pFND[0] = 0x7F;
 	*pFND[1] = 0x7F;
 	*pFND[2] = 0x7F;
@@ -527,15 +525,6 @@ void AllFND_on()
 	*pFND[7] = 0x7F;
 }
 
-void All_FND_toggle(){
-
-while (1){
-        	AllFND_on();
-        	usleep(1000000);
-        	AllFND_Clear();        	
-        	usleep(1000000);
-	}		
-}
 
 
 
@@ -570,21 +559,24 @@ void FND_shuffle()
     }
 }
 
-void FND_Show_Answere_win()
+void FND_Show_Answer_win(int *answer, int *input)
 {
 	if (!isFNDInitialized) return;
 	
-	*pFND[0] = FND_TABLE[1/*answer[3]*/];
-	*pFND[1] = FND_TABLE[2/*answer[2]*/];
-	*pFND[2] = FND_TABLE[3/*answer[1]*/];
-	*pFND[3] = FND_TABLE[4/*answer[0]*/];
+	*pFND[0] = FND_TABLE[answer[3]];
+	*pFND[1] = FND_TABLE[answer[2]];
+	*pFND[2] = FND_TABLE[answer[1]];
+	*pFND[3] = FND_TABLE[answer[0]];
 
-	while(1){
-	*pFND[4] = FND_TABLE[1/*itput[3]*/];
-	*pFND[5] = FND_TABLE[2/*input[2]*/];
-	*pFND[6] = FND_TABLE[3/*input[1]*/];
-	*pFND[7] = FND_TABLE[4/*input[0]*/];
-	usleep(1000000)
+	int i;
+	for (i=0; i<=7; i++){
+		*pFND[4] = FND_TABLE[input[3]];
+		*pFND[5] = FND_TABLE[input[2]];
+		*pFND[6] = FND_TABLE[input[1]];
+		*pFND[7] = FND_TABLE[input[0]];
+		usleep(500000);
+		AllFND_Clear();
+		usleep(500000);
 	}
 }
 
@@ -976,8 +968,6 @@ void CLCD_Display_Custom(int len1, int len2, int CG_or_DD, char *buf1, char *buf
     for (i = 0; i < len2; i++) {
         CLCD_WRITE(buf2[i]);
     }
-
-    // closeCLCD();
 }
 
 

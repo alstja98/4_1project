@@ -8,7 +8,6 @@
 
 #define MAX_INNINGS 9
 #define MAX_DIGITS 4
-#define NUM_LEDS 7
 #define LED_ADDRESS(i) (FPGA_LED + i)
 
 // Global variables
@@ -28,7 +27,7 @@ void playGame();
 void getInput(int *input);
 void checkGuess(int *guess);
 void checkLastInning();
-void updateLastInning(int inning, int strikes, int balls);
+void updateLastInning(int currentInning, int strikes, int balls, int *input);
 void showLastInning(int inning);
 void displayFNDNumbers(int *numbers);
 
@@ -49,7 +48,7 @@ void CLCD_Display_LastInning(int inning);
 
 
 int main() {
-    // devices initialization 완료
+    // devices initialization 테스트 완료
     int result = initDevices(DEVICE_ALL);
 	if (result == FAIL_MEMORY_OPEN) {
 		perror("Could not open 'dev/mem'.");
@@ -61,8 +60,8 @@ int main() {
 		closeDevices();
 		return -1;
 	}
-    
     initializeGame();
+
     // 아래는 테스트 해볼 함수들
     // AlternateLEDBlink();
     // TurnOffTopLED();
@@ -104,7 +103,7 @@ void initializeGame() { // 1단계
     // fnd는 모든 요소가 1초간격으로 깜박이게 출력 - 완료
 }
 
-void generateAnswer() { // 잘 실행됨.
+void generateAnswer() {
     // CPU가 무작위로 중복되지 않는 4자리 숫자 생성
     int digits[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     int i, j, temp;
@@ -116,6 +115,7 @@ void generateAnswer() { // 잘 실행됨.
         digits[j] = temp;
         answer[i] = digits[i];
     }
+    printf("answer: %d%d%d%d\n", answer[0], answer[1], answer[2], answer[3]);
 }
 
 
@@ -129,15 +129,14 @@ void playGame() {
         // fnd는 뒤에 4개는 8888 출력하고, 앞에 4개는 출력 안함 -> 앞에 4개가 출력됨
         // led는 numLives 개수만큼 아래서부터 on -> 괜찮음
         // dot는 타이머 실행 -> B가 나오고 타이머는 안나옴.
-        printf("playGame 시작\n");
         getInput(guess);
-        printf("getInput 통과\n");
         checkGuess(guess);
-        printf("checkGuess 통과\n");
 
         if (strikes == MAX_DIGITS) {
             // 정답을 맞춘 경우. 게임 종료
+            printf("You win!\n");
             run_in_parallel(NULL, CLCD_Display_Thread_FinishWin, ALLLED_Blink_Thread, NULL, NULL);
+            FND_Show_Answer_win(answer, guess);
             break;
         } else {
             // 그 다음 이닝으로 넘어간다.
@@ -146,24 +145,22 @@ void playGame() {
             // led 개수를 하나 감소한다.
             // dot는 타이머로 돌아옴
             run_in_parallel(NULL, CLCD_Display_Thread_Ingame, NULL, NULL, NULL);
-            printf("playGame run_in_parallel 통과\n");
             TurnOffTopLED();
             // Additional code for new components
-            updateLastInning(currentInning, strikes, balls); // 이닝별 스트라이크, 볼 개수 저장
+            updateLastInning(currentInning, strikes, balls, guess); // 이닝별 스트라이크, 볼 개수 저장
             currentInning++;
+            numLives--;
+            printf("lives left: %d\n", numLives);
         }
     }
 
     if (currentInning > MAX_INNINGS || numLives == 0) { // 9회까지 진행했거나 목숨이 0개가 되었을 때
-        int len1 = 9, len2 = 8, CG_or_DD = 1;
-        char buf1[100]="Game over", buf2[100]="You lose";
-        // 게임 오버
-        printf("Game over! You lost the game.\n");
-        // Additional code for new components
-        // displayCLCDMessage(len1, len2, CG_or_DD, buf1, buf2);
-        // displayFNDNumbers(answer); // fnd 수정해야함
-        // displayDotMatrixAnimation(); // 게임 오버 애니메이션으로 수정해야함
-        // updateLEDs(0); // led 수정해야함
+        char buf1[100]="Game Over!";
+        char buf2[100]="Play Again?";
+        int len1 = strlen(buf1), len2 = strlen(buf2);
+        int CG_or_DD = 1;
+        CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
+        printf("Game Over!\n");
     }
 }
 
@@ -172,61 +169,65 @@ void playGame() {
 void getInput(int *input) {
     int index = 0;
     int value = 0;
-    // 키패드에서 받은 값을 input 배열에 저장
-    // 키패드에서 받은 값을 순서대로 FND 모듈에 출력
-
 
     while (index != 4) {
-        if (IsKeypadPressed(0, 0)) {
+        ushort key = GetKeypadWait();
+        if (key == 1) {
             value = 7;
             input[index] = value;
             FND_DrawNumber(index, value);
+            printf("input[%d] = %d\n", index, input[index]);
             index++;
-        }else if (IsKeypadPressed(0, 1)) {
+        }else if (key == 16) {
             value = 8;
             input[index] = value;
             FND_DrawNumber(index, value);
+            printf("input[%d] = %d\n", index, input[index]);
             index++;
-        }else if (IsKeypadPressed(0, 2)) {
+        }else if (key == 256) {
             value = 9;
             input[index] = value;
             FND_DrawNumber(index, value);
+            printf("input[%d] = %d\n", index, input[index]);
             index++;
-        }else if (IsKeypadPressed(0, 3)){
+        }else if (key == 4096){
             if(index == 0){
                 // 숫자를 입력한 적이 없는 경우만 가능함
                 // 무조건 첫번째 이닝의 기록부터 보이게
                 if(currentInning == 1){
                     CLCD_Clear();
-                    char buf1[100]="Denied Last Inning mode", buf2[100]="You should enter 4 digits";
+                    char buf1[100]="Denied!", buf2[100]="Keep Pressed!";
                     int len1=strlen(buf1), len2=strlen(buf2), CG_or_DD = 1;
                     CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
                 }else{
-                    displayedInning = currentInning - 1;
+                    displayedInning = currentInning;
                     CLCD_Display_LastInning(displayedInning);
                 }
             }else{
                 CLCD_Clear();
-                char buf1[100]="Denied Last Inning mode", buf2[100]="You should enter 4 digits";
+                char buf1[100]="Denied!", buf2[100]="Keep Pressed!";
                 int len1=strlen(buf1), len2=strlen(buf2), CG_or_DD = 1;
                 CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
             }
-        }else if (IsKeypadPressed(1, 0)) {
+        }else if (key == 2) {
             value = 4;
             input[index] = value;
             FND_DrawNumber(index, value);
+            printf("input[%d] = %d\n", index, input[index]);
             index++;
-        }else if (IsKeypadPressed(1, 1)) {
+        }else if (key == 32) {
             value = 5;
             input[index] = value;
             FND_DrawNumber(index, value);
+            printf("input[%d] = %d\n", index, input[index]);
             index++;
-        }else if (IsKeypadPressed(1, 2)) {
+        }else if (key == 512){
             value = 6;
             input[index] = value;
             FND_DrawNumber(index, value);
+            printf("input[%d] = %d\n", index, input[index]);
             index++;
-        }else if (IsKeypadPressed(1, 3)){
+        }else if (key == 8192){
             if(index == 0){
                 // 만약 currentInning이 1이면 기능 안됨
                 // 만약 currentInning이 1보다 크면 맨처음누를때는 1이닝 결과부터 보여줌 tempInning = 1;
@@ -234,7 +235,7 @@ void getInput(int *input) {
                 // 보여주는건 tempInning 을 보여줌
                 if(displayedInning == 0 || displayedInning == 1){
                     CLCD_Clear();
-                    char buf1[100]="Denied Last Inning mode", buf2[100]="You should enter 4 digits";
+                    char buf1[100]="Denied!", buf2[100]="Keep Pressed!";
                     int len1=strlen(buf1), len2=strlen(buf2), CG_or_DD = 1;
                     CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
                 }else{
@@ -243,30 +244,33 @@ void getInput(int *input) {
                 }
             }else{
                 CLCD_Clear();
-                char buf1[100]="Denied Last Inning mode", buf2[100]="You should enter 4 digits";
+                char buf1[100]="Denied!", buf2[100]="Keep Pressed!";
                 int len1=strlen(buf1), len2=strlen(buf2), CG_or_DD = 1;
                 CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
             }
-        }else if (IsKeypadPressed(2, 0)) {
+        }else if (key == 4) {
             value = 1;
             input[index] = value;
             FND_DrawNumber(index, value);
+            printf("input[%d] = %d\n", index, input[index]);
             index++;
-        }else if (IsKeypadPressed(2, 1)) {
+        }else if (key == 64) {
             value = 2;
             input[index] = value;
             FND_DrawNumber(index, value);
+            printf("input[%d] = %d\n", index, input[index]);
             index++;
-        }else if (IsKeypadPressed(2, 2)) {
+        }else if (key == 1024) {
             value = 3;
             input[index] = value;
             FND_DrawNumber(index, value);
+            printf("input[%d] = %d\n", index, input[index]);
             index++;
-        }else if (IsKeypadPressed(2, 3)){
+        }else if (key == 16384){
             if(index==0){
                  if(displayedInning == 0 || displayedInning >= currentInning){
                      CLCD_Clear();
-                    char buf1[100]="Denied Last Inning mode", buf2[100]="You should enter 4 digits";
+                    char buf1[100]="Denied!", buf2[100]="Keep Pressed!";
                     int len1=strlen(buf1), len2=strlen(buf2), CG_or_DD = 1;
                     CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
                  }else{
@@ -275,32 +279,33 @@ void getInput(int *input) {
                  }
             }else{
                 CLCD_Clear();
-                char buf1[100]="Denied Last Inning mode", buf2[100]="You should enter 4 digits";
+                char buf1[100]="Denied!", buf2[100]="Keep Pressed!";
                 int len1=strlen(buf1), len2=strlen(buf2), CG_or_DD = 1;
                 CLCD_Display_Custom(len1, len2, CG_or_DD, buf1, buf2);
             }
-        }else if (IsKeypadPressed(3, 0)) {
+        }else if (key == 8) {
             value = 0;
             input[index] = value;
             FND_DrawNumber(index, value);
+            printf("input[%d] = %d\n", index, input[index]);
             index++;
-        }else if (IsKeypadPressed(3, 1)){
+        }else if (key == 128) { //DEL
+            // 다른 숫자 눌러서 index가 늘어난상태니 하나 감소시키고
             // 가장 최근에 입력된 fnd 숫자 지움
-            // index도 하나 감소
             index--;
-            FND_Clear(index);
-        }else if (IsKeypadPressed(3, 2)){
+            FND_Clear(7-index);
+        }else if (key == 2048){
             // enter
+            printf("You pressed enter.\n press keypad number 0-9\n");
+            usleep(500000);
             continue;
-        }else if (IsKeypadPressed(3, 3)){
+        }else if (key == 32768){
             // 목숨 하나 추가
             continue;
         }
 
-        usleep(1000); 
+        usleep(500000); 
     }
-    int number = input[0]*1000 + input[1]*100 + input[2]*10 + input[3];
-    lastInning[currentInning-1][0] = number;
 }
 
 void checkGuess(int *guess) {
@@ -320,14 +325,17 @@ void checkGuess(int *guess) {
             }
         }
     }
+    printf("Innings: %d, Strikes: %d, Balls: %d\n", currentInning, strikes, balls);
 }
 
 
-void updateLastInning(int inning, int strikes, int balls) {
+void updateLastInning(int inning, int strike, int ball, int *input) {
     // Update the last inning array with the current inning's results
-    lastInning[inning][0] = inning;
-    lastInning[inning][1] = strikes;
-    lastInning[inning][2] = balls;
+    int number = input[0]*1000 + input[1]*100 + input[2]*10 + input[3];
+    lastInning[inning-1][0] = number;
+    lastInning[inning-1][1] = strike;
+    lastInning[inning-1][2] = ball;
+    printf("update %d inning, %d N, %d S, %d B\n", inning, lastInning[inning-1][0], lastInning[inning-1][1], lastInning[inning-1][2]);
 }
 
 
@@ -411,8 +419,7 @@ void *CLCD_Display_Thread_Ingame(void *arg) {
     return NULL;
 }
 void *CLCD_Display_Thread_FinishWin(void *arg) {
-    char buf1[100];
-    snprintf(buf1, sizeof(buf1), "%dth inning", currentInning);
+    char buf1[100]="Congratulations!";
     char buf2[100]="You Win!";
     int len1 = strlen(buf1), len2 = strlen(buf2);
     int CG_or_DD = 1;
