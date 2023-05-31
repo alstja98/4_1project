@@ -80,21 +80,6 @@ void initializeGame() { // 1단계
         }
         usleep(1000); 
     }
-
-    // 1. answer 잘 만들어짐 확인 완료
-    // 2. DOT_Display_Baseball()이 잘 실행됨 확인 완료
-    // 3. CLCD_Display_Thread()가 잘 실행됨 확인 완료 (BULLS AND COWS )
-    // 4. ALL LED BLINK 확인 완료함. 근데 몇번 하다가 맘
-    // 5. ALL FND 도 잘 확인함.
-    // 6. keypad 완료.
-
-    // 문제 : run_in_parallel에서 넘어가지 않는다. 
-
-
-    // touchpad의 enter를 누를 시에 playGame()으로 이동해야함 - 완료
-    // led는 우선 모든 요소가 1초 간격으로 깜박이게 출력하게 - 완료
-    // led는 1,3,5,7 번쨰와 2,4,6 번째 LED가 1초 간격으로 서로 번갈아가도록 출력 - 나중에 테스트
-    // fnd는 모든 요소가 1초간격으로 깜박이게 출력 - 완료
 }
 
 void generateAnswer() {
@@ -122,10 +107,7 @@ void playGame() {
             run_in_parallel(NULL, NULL, Back4_FND_On_Thread, LEDOnFromBottomBasedOnLives_Thread, NULL);
         }
         DOT_Inning(currentInning);
-        // 이미 cpu가 생성한 answer가 있는 상태
-        // clcd는 good luck 출력 -> 변화가 안됨
-        // fnd는 뒤에 4개는 8888 출력하고, 앞에 4개는 출력 안함 -> 앞에 4개가 출력됨
-        // led는 numLives 개수만큼 아래서부터 on -> 괜찮음
+
         getInput(guess);
         checkGuess(guess);
 
@@ -136,11 +118,7 @@ void playGame() {
             FND_Show_Answer_win(answer, guess);
             break;
         } else {
-            // 그 다음 이닝으로 넘어간다.
-            // 이전의 strikes, balls 정보를 lastInning 배열에 저장한다.
-            // currentInning도 업데이트 한다.
-            // led 개수를 하나 감소한다.
-            // dot는 타이머로 돌아옴
+            // 정답을 못만춘 경우
             updateLastInning(currentInning, strikes, balls, guess); // 이닝별 스트라이크, 볼 개수 저장
             CLCD_Display_Ingame(currentInning);
             TurnOffTopLED();
@@ -188,9 +166,6 @@ void getInput(int *input) {
             index++;
         }else if (key == 4096){
             if(index == 0){
-                // 숫자를 입력한 적이 없는 경우만 가능함
-                // current - 1 이닝의 결과를 보여줘야함
-                // 이닝이 1인 경우에는 이전 이닝이 없으므로, denied 출력
                 if(currentInning == 1){
                     CLCD_Clear();
                     char buf1[100]="Denied!", buf2[100]="Keep Pressed!";

@@ -110,21 +110,15 @@ typedef struct {
 extern INIT_RESULT	initDevices(DEVICE systems);
 extern void			closeDevices();
 
-// Time functions
-extern float		getElapsedTime();
-
 // Keyboard functions
 extern bool			kbhit();
 extern char			getch();
 
 // LED functions
 extern LEDPTR*		LED;
-extern void			LEDOnFromTop(int count);
 extern void			AllLED_On();
 extern void			AllLED_Off();
-extern void			AllLED_Toggle();
 extern void			ALLLED_Blink();
-extern void			AlternateLEDBlink();
 extern void 		TurnOffTopLED();
 extern void 		LEDOnFromBottomBasedOnLives(int numLives);
 
@@ -141,33 +135,14 @@ extern void 		FND_Show_Answer_lose(int *answer);
 // DOT-Matrix functions
 extern void			DOT_Clear();
 extern void			DOT_Write(ushort table[5]);
-extern void			DOT_Write_Decimal(int no);
+extern void 		DOT_Inning(int inning);
+extern void 		DOT_Display_Baseball();
 
 // CLCD functions
 extern void			CLCD_Clear();
 extern void			CLCD_ReturnHome();
-
-extern CLCDINFO		CLCD_GetInformation();
-extern void			CLCD_SetInformation(CLCDINFO* info);
-
-extern void			CLCD_SetEntryMode(CLCD_ENTRY);
-extern void			CLCD_SetDisplayShift(bool);
-extern void			CLCD_SetDisplayOn(bool);
-extern void			CLCD_SetCursorOn(bool);
-extern void			CLCD_SetBlinking(bool);
-extern void			CLCD_SetDisplayShiftMode(CLCD_SHIFT);
-extern void			CLCD_SetCursorShiftMode(CLCD_SHIFT);
-extern void			CLCD_SetDataLength(CLCD_DATA);
-extern void			CLCD_SetDisplayLine(CLCD_LINE);
-extern void			CLCD_SetFontSize(CLCD_FONT);
-
-extern void			CLCD_SetUserFont(int no, ushort font[10]);
 extern void			CLCD_SetCursorPos(char pos);
-extern void			CLCD_Put(char value);
-
-extern void			CLCD_SetLine(int line);
-extern void			CLCD_Print(const char* pszText);
-extern void			CLCD_PrintFit(const char* pszText);
+extern void 		CLCD_Display_Custom(int len1, int len2, int CG_or_DD, char *buf1, char *buf2);
 
 // Keypad functions
 extern ushort		GetKeypad();

@@ -44,8 +44,6 @@ void closeFND();
 
 int initDOT(int fd);
 void closeDOT();
-void DOT_Inning(int inning);
-void DOT_Display_Baseball();
 
 int initCLCD(int fd);
 void closeCLCD();
@@ -55,7 +53,6 @@ void CLCD_SET_SHIFT(bool C_or_D, bool L_or_R);
 void CLCD_SET_DISPLAY();
 void CLCD_SET_ENTRY_MODE();
 void CLCD_SET_FUNCTION();
-void CLCD_Display_Custom(int len1, int len2, int CG_or_DD, char *buf1, char *buf2);
 
 
 int initKEYPAD(int fd);
@@ -82,9 +79,6 @@ ushort FND_TABLE[16] = {
 	0x7F, 0x67, 0x77, 0x7C,
 	0x39, 0x5E, 0x79, 0x71
 };
-
-
-
 
 // DOT variables
 bool isDOTInitialized = FALSE;
@@ -164,22 +158,6 @@ void closeDevices()
 	close(fdMem);
 
 	printf("All device was closed.\n");
-}
-
-//
-// Time functions
-//
-float getElapsedTime()
-{
-	static struct timeval prev = { 0, 0 };
-	struct timeval current;
-
-	gettimeofday(&current, NULL);
-	
-	float elapsed = (current.tv_sec - prev.tv_sec) * 1000.0f + (current.tv_usec - prev.tv_usec) / 1000.0f;
-	prev = current;
-
-	return elapsed;
 }
 
 //
@@ -276,21 +254,6 @@ void AllLED_Off()
 	*((ushort*)LED) = 0x00FF;
 }
 
-void AllLED_Toggle()
-{
-	if (LED == 0) return;
-	*((ushort*)LED) = 0x00FF & ~*((ushort*)LED);
-}
-
-void LEDOnFromTop(int count)
-{
-	ushort led = 1U;
-	while (count-- > 0)
-	{
-		*((ushort*)LED) = 0x00FF & ~led;
-		led = (led << 1) | 1U;
-	}
-}
 void TurnOffTopLED() //가장 위에 켜져 있는 LED 하나를 끄는 함수
 {
     if (LED == 0) return;
@@ -322,34 +285,6 @@ void ALLLED_Blink(){
         AllLED_Off();
         usleep(500000); // 다시 0.5초 동안 대기합니다.
     }
-}
-
-void AlternateLEDBlink() { //1,3,5,7 번째와 2,4,6번쨰 LED 번갈아 출력
-	if (LED == 0) return;
-	int i;
-	for (i = 0; i < 10; ++i) {
-			// 1, 3, 5, 7 번째 LED 켜기
-			LED->LED0 = 1;
-			LED->LED2 = 1;
-			LED->LED4 = 1;
-			LED->LED6 = 1;
-			// 2, 4, 6 번째 LED 끄기
-			LED->LED1 = 0;
-			LED->LED3 = 0;
-			LED->LED5 = 0;
-			usleep(500000); 
-
-			// 2, 4, 6 번째 LED 켜기
-			LED->LED1 = 1;
-			LED->LED3 = 1;
-			LED->LED5 = 1;
-			// 1, 3, 5, 7 번째 LED 끄기
-			LED->LED0 = 0;
-			LED->LED2 = 0;
-			LED->LED4 = 0;
-			LED->LED6 = 0;
-			sleep(500000); 
-		}
 }
 
 void LEDOnFromBottomBasedOnLives(int numLives) { // numLives에 따라 아래에서부터 LED 켜는 함수
@@ -583,13 +518,6 @@ void DOT_Write(ushort table[5])
 	*pDOT_COL5 = table[4];
 }
 
-void DOT_Write_Decimal(int no)
-{
-	if (no < 0 || no > 10) return;
-	DOT_Write(DOT_TABLE[no]);
-}
-
-
 
 void DOT_Inning(int inning){
     int i;
@@ -708,107 +636,6 @@ void CLCD_ReturnHome()
 	CLCD_SET_COMMAND(0x02);
 }
 
-CLCDINFO CLCD_GetInformation()
-{
-	if (!isCLCDInitialized) return CLCDEmpty;
-	return CLCDInfo;
-}
-
-void CLCD_SetInformation(CLCDINFO* info)
-{
-	if (!isCLCDInitialized) return;
-	CLCDInfo = *info;
-	CLCD_SET_FUNCTION();
-	CLCD_SET_DISPLAY();
-	CLCD_SET_SHIFT(1, CLCDInfo.displayShiftMode);
-	CLCD_SET_SHIFT(0, CLCDInfo.cursorShiftMode);
-	CLCD_SET_ENTRY_MODE();
-}
-
-void CLCD_SetEntryMode(CLCD_ENTRY entry)
-{
-	if (!isCLCDInitialized) return;
-	CLCDInfo.entryMode = entry;
-	CLCD_SET_ENTRY_MODE();
-}
-
-void CLCD_SetDisplayShift(bool shiftOn)
-{
-	if (!isCLCDInitialized) return;
-	CLCDInfo.shiftOn = shiftOn;
-	CLCD_SET_ENTRY_MODE();
-}
-
-void CLCD_SetDisplayOn(bool value)
-{
-	if (!isCLCDInitialized) return;
-	CLCDInfo.displayOn = value;
-	CLCD_SET_DISPLAY();
-}
-
-void CLCD_SetCursorOn(bool value)
-{
-	if (!isCLCDInitialized) return;
-	CLCDInfo.cursorOn = value;
-	CLCD_SET_DISPLAY();
-}
-
-void CLCD_SetBlinking(bool value)
-{
-	if (!isCLCDInitialized) return;
-	CLCDInfo.blinking = value;
-	CLCD_SET_DISPLAY(CLCDInfo.displayOn, CLCDInfo.cursorOn, CLCDInfo.blinking);
-}
-
-void CLCD_SET_DISPLAYShiftMode(CLCD_SHIFT shiftMode)
-{
-	if (!isCLCDInitialized) return;
-	CLCDInfo.displayShiftMode = shiftMode;
-	CLCD_SET_SHIFT(1, shiftMode);
-}
-
-void CLCD_SetCursorShiftMode(CLCD_SHIFT shiftMode)
-{
-	if (!isCLCDInitialized) return;
-	CLCDInfo.cursorShiftMode = shiftMode;
-	CLCD_SET_SHIFT(0, shiftMode);
-}
-
-void CLCD_SetDataLength(CLCD_DATA dataLength)
-{
-	if (!isCLCDInitialized) return;
-	CLCDInfo.dataLength = dataLength;
-	CLCD_SET_FUNCTION();
-}
-
-void CLCD_SetDisplayLine(CLCD_LINE displayLine)
-{
-	if (!isCLCDInitialized) return;
-	CLCDInfo.displayLine = displayLine;
-	CLCD_SET_FUNCTION();
-}
-
-void CLCD_SetFontSize(CLCD_FONT fontSize)
-{
-	if (!isCLCDInitialized) return;
-	CLCDInfo.fontSize = fontSize;
-	CLCD_SET_FUNCTION();
-}
-
-void CLCD_SetUserFont(int no, ushort font[10])
-{
-	if (!isCLCDInitialized) return;
-
-	ushort command = 0x40;
-	command |= (no * 8);
-	CLCD_SET_COMMAND(command);
-
-	int idx = 0;
-	for (idx = 0; idx < 8; idx++)
-	{
-		CLCD_WRITE(font[idx]);	
-	}
-}
 
 void CLCD_SetCursorPos(char pos)
 {
@@ -819,57 +646,6 @@ void CLCD_SetCursorPos(char pos)
 	CLCD_SET_COMMAND(command);
 }
 
-void CLCD_Put(char ch)
-{
-	if (!isCLCDInitialized) return;
-	CLCD_WRITE(ch);
-}
-
-void CLCD_SetLine(int line)
-{
-	if (!isCLCDInitialized || (line < 0) || (line > 1)) return;
-	CLCD_SetCursorPos(0x40 * line);
-}
-
-void CLCD_Print(const char* pszText)
-{
-	if (!isCLCDInitialized || (pszText == 0)) return;
-
-	char* pPtr = (char *)pszText;
-	while (*pPtr != 0)
-	{
-		CLCD_WRITE(*pPtr);
-		pPtr++;
-	}
-}
-
-void CLCD_PrintFit(const char* pszText)
-{
-	if (!isCLCDInitialized || (pszText == 0)) return;
-
-	CLCD_SET_COMMAND(0x01);	// CLEAR
-	CLCD_SET_COMMAND(0x02);	// RETURN HOME
-
-	int nCnt = 0;
-	bool didNewLine = FALSE;
-
-	for (nCnt = 0; nCnt < 16; nCnt++) {
-		char ch = *(pszText + nCnt);
-		if (ch == 0) return;
-		if (ch == '\n') { nCnt++; break; }
-		CLCD_WRITE(ch);				
-	}
-
-	CLCD_SetCursorPos(0x40);
-	for (; nCnt < 32; nCnt++) {
-		char ch = *(pszText + nCnt);
-		if (ch == 0) return;
-		CLCD_WRITE(ch);
-	}
-}
-
-
-// 숫자야구 clcd 전용 코드 
 void CLCD_Display_Custom(int len1, int len2, int CG_or_DD, char *buf1, char *buf2) {
     int i;
     // Write command to CLCD control register
